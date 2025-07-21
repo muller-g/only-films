@@ -23,6 +23,7 @@ const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [imageFile, setImageFile] = useState<any>(null);
+  const [profilePhoto, setProfilePhoto] = useState<any>();
 
   const [profileData, setProfileData] = useState<ProfileData>({
     id: user?.id || '',
@@ -108,6 +109,7 @@ const Profile: React.FC = () => {
           Authorization: 'Bearer ' + token
         }
       }).then(res => {
+        console.log(imageFile)
         setProfileData({
           id: user?.id || '',
           name: user?.name || '',
@@ -118,12 +120,12 @@ const Profile: React.FC = () => {
             push: false,
             reviews: true
           },
-          profileImage: URL.createObjectURL(imageFile)
+          profileImage: imageFile ? URL.createObjectURL(imageFile) : profilePhoto
         });
   
         MySwal.fire({
           title: <p>Sucesso</p>,
-          text: "Review cadastrada com sucesso!",
+          text: "Perfil atualizado com sucesso!",
           icon: "success"
         })
       })
@@ -165,6 +167,7 @@ const Profile: React.FC = () => {
           'Authorization': 'Bearer ' + token
         }
       }).then(res => {
+        setProfilePhoto(process.env.REACT_APP_API_URL + '/' + res.data.profile_photo.path + '/' + res.data.profile_photo.name)
         setProfileData({
           id: res.data.id || '',
           name: res.data.name || '',

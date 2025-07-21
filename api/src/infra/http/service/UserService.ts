@@ -20,7 +20,7 @@ export default class UserService {
                 },
                 data: {
                     name: user.name,
-                    profile_photo_id: user.profile_photo_id
+                    ...(user.profile_photo_id && { profile_photo_id: user.profile_photo_id })
                 }
             });
         } catch (e: any){

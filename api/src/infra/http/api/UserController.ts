@@ -57,25 +57,34 @@ export default class UserController {
                 const uploadMiddleware = createMulter((req: any) => {
                     return `uploads/users/${req.body.id}`;
                 }).single('coverPhoto');
-            
+                
                 uploadMiddleware(req, res, async (err) => {
-                    let reqFile: any = req.file;
+                    let createdUserFile;
 
-                    let imgFile = {
-                        name: reqFile.filename,
-                        path: reqFile.destination,
-                        originalName: reqFile.originalname
-                    };
+                    if(req.file){
+                        let reqFile: any = req.file;
 
-                    let createdUserFile = await ImageFileService.create(imgFile);
+                        let imgFile = {
+                            name: reqFile.filename,
+                            path: reqFile.destination,
+                            originalName: reqFile.originalname
+                        };
 
+                        createdUserFile = await ImageFileService.create(imgFile);
+                    }
+                    
                     const { name, id } = req.body;
 
-                    let userCreated = await UserService.update({
+                    const updateData: any = {
                         name: name,
                         id: id,
-                        profile_photo_id: createdUserFile.id
-                    });    
+                    };
+
+                    if (createdUserFile) {
+                        updateData.profile_photo_id = createdUserFile.id;
+                    }
+
+                    await UserService.update(updateData); 
                     
                 });
 
