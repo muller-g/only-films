@@ -1,0 +1,139 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+interface Cover {
+  name: string;
+  original_name: string;
+  path: string;
+}
+
+interface Movie {
+  id: string;
+  category: string;
+  title: string;
+  release_date: string;
+  cover: Cover;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Review {
+  id: string;
+  movie: Movie;
+  user: User;
+  rate: number;
+  review: string;
+  created_at: string;
+}
+
+const AllReviews: React.FC = () => {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const { user, token } = useAuth();
+
+  useEffect(() => {
+    const getReviews = async () => {
+      await axios.get(process.env.REACT_APP_API_URL + '/api/all-reviews', {
+        headers: {
+          Authorization: 'Bearer ' + token
+        }
+      })
+        .then(res => setReviews(res.data))
+        .catch(() => setReviews([]));
+    };
+    getReviews();
+  }, []);
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <span
+        key={index}
+        className={`text-lg ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}
+      >
+        ★
+      </span>
+    ));
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-8">
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Todos os Reviews</h1>
+          <p className="text-gray-600">Veja todos os reviews de todos os usuários</p>
+        </div>
+        <div className="space-y-6">
+          {reviews.length > 0 ? (
+            reviews.map(review => (
+              <div key={review.id} className="bg-white rounded-2xl shadow-xl p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-shrink-0">
+                    <img
+                      src={process.env.REACT_APP_API_URL + '/' + review.movie.cover.path + '/' + review.movie.cover.name}
+                      alt={review.movie.title}
+                      className="w-32 h-48 object-cover rounded-lg shadow-md"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          <Link to={`/movie/${review.movie.id}`} className="hover:underline text-indigo-700">
+                            {review.movie.title}
+                          </Link>
+                        </h3>
+                        <div className="flex items-center space-x-4 mb-2">
+                          <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                            {review.movie.category}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {review.movie.release_date}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <span>Criado por:</span>
+                          <span className="font-medium text-indigo-700">{review.user.name}</span>
+                          <span>({review.user.email})</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {renderStars(review.rate)}
+                        <span className="text-sm text-gray-600">({review.rate}/5)</span>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed mb-4">
+                      {review.review}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum review encontrado</h3>
+              <p className="text-gray-600 mb-6">Nenhum review foi cadastrado ainda.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AllReviews; 
