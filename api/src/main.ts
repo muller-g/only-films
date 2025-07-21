@@ -1,4 +1,4 @@
-import app from '../src/infra/server';
+import app from './infra/server';
 import LoginController from './infra/http/api/LoginController';
 import ReviewController from './infra/http/api/ReviewController';
 import UserController from './infra/http/api/UserController';
