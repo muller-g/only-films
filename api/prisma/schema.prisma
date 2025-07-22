@@ -21,7 +21,7 @@ model User {
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
   Reviews       Review[]
-  profile_photo      ImageFile?    @relation(fields: [profile_photo_id], references: [id])
+  profile_photo      ImageFile?    @relation(fields: [profile_photo_id], references: [id], onDelete: Cascade)
   profile_photo_id String?
   role          String        @default("user")
 }
@@ -42,7 +42,7 @@ model Movie {
   title         String
   release_date  String
   category      String
-  cover      ImageFile?    @relation(fields: [cover_id], references: [id])
+  cover      ImageFile?    @relation(fields: [cover_id], references: [id], onDelete: NoAction)
   cover_id      String?
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
@@ -53,7 +53,7 @@ model Review {
   id            String        @id @default(uuid())
   user          User          @relation(fields: [user_id], references: [id])
   user_id       String
-  movie         Movie         @relation(fields: [movie_id], references: [id])
+  movie         Movie         @relation(fields: [movie_id], references: [id], onDelete: Cascade)
   movie_id      String
   review        String
   rate          Int

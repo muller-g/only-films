@@ -43,6 +43,18 @@ export default class MovieService {
         }
     }
 
+    static async delete(id: string){
+        try {
+            return await prisma.movie.delete({
+                where: {
+                    id: id
+                }
+            });
+        } catch (e: any){
+            return e.message;
+        }
+    }
+
     static async getAllMovies(){
         try {
             return await prisma.movie.findMany({});

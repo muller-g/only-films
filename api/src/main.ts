@@ -1,7 +1,7 @@
 import app from './infra/server';
 import LoginController from './infra/http/api/LoginController';
 import ReviewController from './infra/http/api/ReviewController';
-import UserController from './infra/http/api/AdminController';
+import UserController from './infra/http/api/UserController';
 import logger from './service/WinstonLogger';
 import AdminController from './infra/http/api/AdminController';
 

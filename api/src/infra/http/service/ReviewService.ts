@@ -96,4 +96,16 @@ export default class ReviewService {
             return e.message;
         }
     }
+
+    static async delete(id: string){
+        try {
+            return await prisma.review.delete({
+                where: {
+                    id: id
+                }
+            });
+        } catch (e: any){
+            return e.message;
+        }
+    }
 }

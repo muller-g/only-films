@@ -75,6 +75,42 @@ export default class ReviewController {
             }
         });
 
+        app.delete("/api/reviews/:id", EnsureUserToken.validate, async (req: Request | any, res: Response) => {
+            try {
+                let isAdmin = req.context.user.role === "admin";
+
+                if(!isAdmin) {
+                    return res.status(403).json({message: "Unauthorized"});
+                }
+
+                const reviewId = req.params.id;
+
+                await ReviewService.delete(reviewId);
+
+                return res.status(200).json({message: "Review deleted successfully"});
+            } catch(e){
+                return res.status(500).json("Error");
+            } 
+        });
+
+        app.delete("/api/movies/:id", EnsureUserToken.validate, async (req: Request | any, res: Response) => {
+            try {
+                let isAdmin = req.context.user.role === "admin";
+
+                if(!isAdmin) {
+                    return res.status(403).json({message: "Unauthorized"});
+                }
+
+                const movieId = req.params.id;
+
+                await MovieService.delete(movieId);
+                
+                return res.status(200).json({message: "Movie deleted successfully"});
+            } catch(e){
+                return res.status(500).json("Error");
+            } 
+        });
+
         app.get("/api/review/:id", EnsureUserToken.validate, async (req: Request, res: Response) => {
             try {
                 const movieId = req.params.id;

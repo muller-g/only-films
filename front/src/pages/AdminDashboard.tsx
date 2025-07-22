@@ -3,22 +3,26 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
 
 const AdminDashboard: React.FC = () => {
   const [dashData, setDashData] = useState<any>(null);
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
+
+  const getData = async () => {
+    await axios.get(process.env.REACT_APP_API_URL + '/api/admin-dashboard', {
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    })
+      .then(res => setDashData(res.data))
+      .catch(() => navigate('/dashboard'));
+  };
 
   useEffect(() => {
-    const getData = async () => {
-      await axios.get(process.env.REACT_APP_API_URL + '/api/admin-dashboard', {
-        headers: {
-          Authorization: 'Bearer ' + token
-        }
-      })
-        .then(res => setDashData(res.data))
-        .catch(() => navigate('/dashboard'));
-    };
     getData();
   }, []);
 
@@ -46,6 +50,54 @@ const AdminDashboard: React.FC = () => {
     { id: 2, name: 'Joana Silva', email: 'joana@example.com', role: 'User', created_at: '2025' },
     { id: 3, name: 'Carlos Souza', email: 'carlos@example.com', role: 'User', created_at: '2025' },
   ];
+
+  async function handleDeleteMovie(movieId: number) {
+    await axios.delete(`${process.env.REACT_APP_API_URL}/api/movies/${movieId}`, {
+      headers: {
+          Authorization: 'Bearer ' + token
+        }
+      })
+      .then(res => {
+        MySwal.fire({
+          title: <p>Sucesso</p>,
+          text: "Filme excluído com sucesso!",
+          icon: "success"
+        })
+
+        getData();
+      })
+      .catch(() => {
+        MySwal.fire({
+          title: <p>Erro</p>,
+          text: "Erro ao deletar filme!",
+          icon: "error"
+        })
+      });
+  }
+
+  async function handleDeleteReview(reviewId: number) {
+    await axios.delete(`${process.env.REACT_APP_API_URL}/api/reviews/${reviewId}`, {
+      headers: {
+          Authorization: 'Bearer ' + token
+        }
+      })
+      .then(res => {
+        MySwal.fire({
+          title: <p>Sucesso</p>,
+          text: "Review excluído com sucesso!",
+          icon: "success"
+        })
+
+        getData();
+      })
+      .catch(() => {
+        MySwal.fire({
+          title: <p>Erro</p>,
+          text: "Erro ao deletar review!",
+          icon: "error"
+        })
+      });
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-8">
@@ -82,6 +134,7 @@ const AdminDashboard: React.FC = () => {
                 <th className="px-6 py-3">Categoria</th>
                 <th className="px-6 py-3">Ano</th>
                 <th className="px-6 py-3">Cadastrado em</th>
+                <th className="px-6 py-3">Edit</th>
               </tr>
             </thead>
             <tbody className="text-gray-700">
@@ -91,6 +144,7 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-6 py-4">{movie.category}</td>
                   <td className="px-6 py-4">{movie.release_date}</td>
                   <td className="px-6 py-4">{formatDate(movie.created_at)}</td>
+                  <td className="px-6 py-4"><button onClick={() => handleDeleteMovie(movie.id)} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition duration-300">Deletar</button></td>
                 </tr>
               ))}
             </tbody>
@@ -106,6 +160,7 @@ const AdminDashboard: React.FC = () => {
                 <th className="px-6 py-3">Review</th>
                 <th className="px-6 py-3">Nota</th>
                 <th className="px-6 py-3">Cadastrado em</th>
+                <th className="px-6 py-3">Edit</th>
               </tr>
             </thead>
             <tbody className="text-gray-700">
@@ -116,6 +171,7 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-6 py-4">{review.review}</td>
                   <td className="px-6 py-4">{renderStars(review.rate)}</td>
                   <td className="px-6 py-4">{formatDate(review.created_at)}</td>
+                  <td className="px-6 py-4"><button onClick={() => handleDeleteReview(review.id)} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition duration-300">Deletar</button></td>
                 </tr>
               ))}
             </tbody>
