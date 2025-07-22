@@ -18,6 +18,7 @@ export default class EnsureUserToken {
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || '');
+
             req.token = token;
             req.context = {
                 toke: token,

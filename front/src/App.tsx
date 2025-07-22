@@ -12,6 +12,7 @@ import MyReviews from './pages/MyReviews';
 import ProtectedRoute from './components/ProtectedRoute';
 import MovieDetails from './pages/MovieDetails';
 import AllReviews from './pages/AllReviews';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -29,6 +30,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin-dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 } 
               />

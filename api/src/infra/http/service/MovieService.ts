@@ -42,4 +42,12 @@ export default class MovieService {
             return e.message;
         }
     }
+
+    static async getAllMovies(){
+        try {
+            return await prisma.movie.findMany({});
+        } catch (e: any){
+            return e.message;
+        }
+    }
 }

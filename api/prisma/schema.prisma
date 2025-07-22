@@ -23,6 +23,7 @@ model User {
   Reviews       Review[]
   profile_photo      ImageFile?    @relation(fields: [profile_photo_id], references: [id])
   profile_photo_id String?
+  role          String        @default("user")
 }
 
 model ImageFile {
