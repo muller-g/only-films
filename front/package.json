@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && sudo rm -rf /var/www/html/* && sudo cp -r ./build/* /var/www/html",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
