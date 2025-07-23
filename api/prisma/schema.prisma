@@ -46,7 +46,7 @@ model Movie {
   cover_id      String?
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
-  Reviews       Review[]
+  reviews       Review[]
 }
 
 model Review {

@@ -15,6 +15,7 @@ interface Movie {
   title: string;
   release_date: string;
   cover: Cover;
+  _count: any;
 }
 
 interface User {
@@ -23,30 +24,21 @@ interface User {
   email: string;
 }
 
-interface Review {
-  id: string;
-  movie: Movie;
-  user: User;
-  rate: number;
-  review: string;
-  created_at: string;
-}
-
-const AllReviews: React.FC = () => {
-  const [reviews, setReviews] = useState<Review[]>([]);
+const AllMovies: React.FC = () => {
+  const [movies, setMovies] = useState<Movie[]>([]);
   const { user, token } = useAuth();
 
   useEffect(() => {
-    const getReviews = async () => {
-      await axios.get(process.env.REACT_APP_API_URL + '/api/all-reviews', {
+    const getMovies = async () => {
+      await axios.get(process.env.REACT_APP_API_URL + '/api/all-movies', {
         headers: {
           Authorization: 'Bearer ' + token
         }
       })
-        .then(res => setReviews(res.data))
-        .catch(() => setReviews([]));
+        .then(res => setMovies(res.data))
+        .catch(() => setMovies([]));
     };
-    getReviews();
+    getMovies();
   }, []);
 
   const renderStars = (rating: number) => {
@@ -72,18 +64,18 @@ const AllReviews: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-8">
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Todos os Reviews</h1>
-          <p className="text-gray-600">Veja todos os reviews de todos os usuários</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Todos os Filmes</h1>
+          <p className="text-gray-600">Veja todos os filmes e reviews de todos os usuários</p>
         </div>
         <div className="space-y-6">
-          {reviews.length > 0 ? (
-            reviews.map(review => (
-              <div key={review.id} className="bg-white rounded-2xl shadow-xl p-6">
+          {movies.length > 0 ? (
+            movies.map(movie => (
+              <div key={movie.id} className="bg-white rounded-2xl shadow-xl p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-shrink-0">
                     <img
-                      src={process.env.REACT_APP_API_URL + '/' + review.movie.cover.path + '/' + review.movie.cover.name}
-                      alt={review.movie.title}
+                      src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
+                      alt={movie.title}
                       className="w-32 h-48 object-cover rounded-lg shadow-md"
                     />
                   </div>
@@ -91,31 +83,26 @@ const AllReviews: React.FC = () => {
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                          <Link to={`/movie/${review.movie.id}`} className="hover:underline text-indigo-700">
-                            {review.movie.title}
+                          <Link to={`/movie/${movie.id}`} className="hover:underline text-indigo-700">
+                            {movie.title}
                           </Link>
                         </h3>
                         <div className="flex items-center space-x-4 mb-2">
                           <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
-                            {review.movie.category}
+                            {movie.category}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {review.movie.release_date}
+                            {movie.release_date}
                           </span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <span>Criado por:</span>
-                          <span className="font-medium text-indigo-700">{review.user.name}</span>
-                          <span>({review.user.email})</span>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {renderStars(review.rate)}
-                        <span className="text-sm text-gray-600">({review.rate}/5)</span>
+                        {renderStars(1)}
+                        <span className="text-sm text-gray-600">({1}/5)</span>
                       </div>
                     </div>
                     <p className="text-gray-700 leading-relaxed mb-4">
-                      {review.review}
+                      {"Reviews: " + movie?._count?.reviews}
                     </p>
                   </div>
                 </div>
@@ -136,4 +123,4 @@ const AllReviews: React.FC = () => {
   );
 };
 
-export default AllReviews; 
+export default AllMovies; 

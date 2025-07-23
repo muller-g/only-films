@@ -31,7 +31,44 @@ export default class MovieService {
         }
     }
 
-    static async getById(id: string){
+    static async getById(id: string) {
+        try {
+            const movie = await prisma.movie.findUnique({
+                where: { id },
+                include: {
+                    cover: true,
+                    reviews: {
+                        include: {
+                            user: {
+                                include: {
+                                    profile_photo: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            const aggregate = await prisma.review.aggregate({
+                where: {
+                    movie_id: id,
+                },
+                _sum: {
+                    rate: true,
+                },
+            });
+
+            return {
+                ...movie,
+                total_rate: aggregate._sum.rate ?? 0,
+            };
+        } catch (e: any) {
+            return e.message;
+        }
+    }
+
+
+    static async getReview(id: string){
         try {
             return await prisma.movie.findUnique({
                 where: {
@@ -55,10 +92,19 @@ export default class MovieService {
         }
     }
 
-    static async getAllMovies(){
+    static async getAllMovies() {
         try {
-            return await prisma.movie.findMany({});
-        } catch (e: any){
+            return await prisma.movie.findMany({
+                include: {
+                    cover: true,
+                    _count: {
+                        select: {
+                            reviews: true,
+                        },
+                    },
+                },
+            });
+        } catch (e: any) {
             return e.message;
         }
     }

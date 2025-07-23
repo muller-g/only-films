@@ -111,18 +111,6 @@ export default class ReviewController {
             } 
         });
 
-        app.get("/api/review/:id", EnsureUserToken.validate, async (req: Request, res: Response) => {
-            try {
-                const movieId = req.params.id;
-
-                const reviews = await ReviewService.getReview(movieId);
-
-                return res.status(200).json(reviews);
-            } catch(e){
-                return res.status(500).json("Error");
-            } 
-        });
-
         app.get("/api/all-reviews", EnsureUserToken.validate, async (req: Request, res: Response) => {
             try {
 

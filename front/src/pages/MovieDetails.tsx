@@ -2,7 +2,6 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
 
 interface Cover {
   name: string;
@@ -44,22 +43,27 @@ const MovieDetails: React.FC = () => {
   const { user, token } = useAuth();
 
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [movie, setMovie] = useState<any>();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userRating, setUserRating] = useState(5);
   const [userReview, setUserReview] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const getReview = async () => {
-      await axios.get(process.env.REACT_APP_API_URL + '/api/review/' + id, {
-        headers: {
-          Authorization: 'Bearer ' + token
-        }
+  const getMovie = async () => {
+    await axios.get(process.env.REACT_APP_API_URL + '/api/movie/' + id, {
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    })
+      .then(res => {
+        setReviews(res.data.reviews);
+        setMovie(res.data);
       })
-        .then(res => setReviews(res.data))
-        .catch(() => setReviews([]));
-    };
-    getReview();
+      .catch(() => setReviews([]));
+  };
+  
+  useEffect(() => {
+    getMovie();
   }, []);
 
   const handleRateClick = (rate: number) => {
@@ -92,11 +96,12 @@ const MovieDetails: React.FC = () => {
       // Tratar erro
     } finally {
       setIsSubmitting(false);
+      getMovie();
     }
   };
 
   // Calcula média das notas
-  const averageRate = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + (r.rate || 0), 0) / reviews.length) : 0;
+  const averageRate = reviews.length > 0 ? movie.total_rate / reviews.length : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-4 px-2 sm:px-4 lg:px-8 pt-8">
@@ -106,14 +111,14 @@ const MovieDetails: React.FC = () => {
           {/* Placeholder para imagem do filme */}
           <div className="w-40 h-60 bg-gray-200 rounded-lg mb-6">
             <img
-              src={process.env.REACT_APP_API_URL + '/' + reviews[0]?.movie?.cover?.path + '/' + reviews[0]?.movie?.cover?.name}
-              alt={reviews[0]?.movie?.title}
+              src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
+              alt={movie?.title}
               className="w-full h-full object-cover rounded-lg shadow-md"
             />  
           </div>
-          <h2 className="text-2xl font-bold mb-2">{reviews[0]?.movie?.title}</h2>
-          <p className="text-gray-600 mb-2">Categoria: <span className="font-medium">{reviews[0]?.movie?.category}</span></p>
-          <p className="text-gray-600 mb-2">Lançamento: <span className="font-medium">{reviews[0]?.movie?.release_date}</span></p>
+          <h2 className="text-2xl font-bold mb-2">{movie?.title}</h2>
+          <p className="text-gray-600 mb-2">Categoria: <span className="font-medium">{movie?.category}</span></p>
+          <p className="text-gray-600 mb-2">Lançamento: <span className="font-medium">{movie?.release_date}</span></p>
           {/* Estrelinhas de avaliação (apenas exibição da média) */}
           <div className="flex items-center space-x-2 mb-4">
             {[1, 2, 3, 4, 5].map(star => (
@@ -124,7 +129,7 @@ const MovieDetails: React.FC = () => {
                 ★
               </span>
             ))}
-            <span className="ml-2 text-sm text-gray-600">({averageRate.toFixed(1)}/5)</span>
+            <span className="ml-2 text-sm text-gray-600">({averageRate?.toFixed(1)}/5)</span>
           </div>
           <button
             className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-200 mb-2"

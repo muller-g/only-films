@@ -11,8 +11,9 @@ import Profile from './pages/Profile';
 import MyReviews from './pages/MyReviews';
 import ProtectedRoute from './components/ProtectedRoute';
 import MovieDetails from './pages/MovieDetails';
-import AllReviews from './pages/AllReviews';
+import AllMovies from './pages/AllMovies';
 import AdminDashboard from './pages/AdminDashboard';
+import AddReview from './pages/AddReview';
 
 function App() {
   return (
@@ -38,6 +39,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/add-review" 
+                element={
+                  <ProtectedRoute>
+                    <AddReview />
                   </ProtectedRoute>
                 } 
               />
@@ -69,7 +78,7 @@ function App() {
                 path="/all-reviews" 
                 element={
                   <ProtectedRoute>
-                    <AllReviews />
+                    <AllMovies />
                   </ProtectedRoute>
                 } 
               />

@@ -8,12 +8,14 @@ import withReactContent from 'sweetalert2-react-content'
 interface MovieFormData {
   title: string;
   category: string;
+  review: string;
   releaseDate: string;
+  rating: number;
   coverImage?: string;
   movieId?: string;
 }
 
-const AddMovie: React.FC = () => {
+const AddReview: React.FC = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,6 +23,8 @@ const AddMovie: React.FC = () => {
   const [formData, setFormData] = useState<MovieFormData>({
     title: '',
     category: '',
+    review: '',
+    rating: 5,
     releaseDate: '',
     movieId: ''
   });
@@ -66,7 +70,7 @@ const AddMovie: React.FC = () => {
     }));
     setShowSuggestions(false);
     if (movie.coverImage) {
-      setImageFile(null);
+      setImageFile(null); // Limpa imagem customizada se houver
     }
   };
 
@@ -121,32 +125,25 @@ const AddMovie: React.FC = () => {
 
       if(formData.movieId !== ''){
 
-        MySwal.fire({
-          title: <p>Aviso</p>,
-          text: "Filme ja existe na base de dados.",
-          icon: "warning",
-        }).then(() => {
-          setFormData(prev => ({
-              ...prev,
-              title: '',
-              category: '',
-              releaseDate: '',
-              coverImage: '',
-            }));
+        contentType = 'application/json'
+        uploadData.append('userId', user?.id)
+        uploadData.append('movieId', formData.movieId || '')
+        uploadData.append('rate', formData.rating.toString())
+        uploadData.append('review', formData.review)
+      
+      } else {
 
-            setImageFile(null);
-        });
-
-        return;
+        uploadData.append('title', formData.title)
+        uploadData.append('category', formData.category)
+        uploadData.append('rate', formData.rating.toString())
+        uploadData.append('releaseDate', formData.releaseDate)
+        uploadData.append('review', formData.review)
+        uploadData.append('userId', user?.id)
+        uploadData.append('coverPhoto', imageFile)
+      
       }
 
-      uploadData.append('title', formData.title)
-      uploadData.append('category', formData.category)
-      uploadData.append('releaseDate', formData.releaseDate)
-      uploadData.append('userId', user?.id)
-      uploadData.append('coverPhoto', imageFile)
-
-      await axios.post(process.env.REACT_APP_API_URL + '/api/create-movie', uploadData, {
+      await axios.post(process.env.REACT_APP_API_URL + '/api/create-review', uploadData, {
         headers: {
           "Content-Type": contentType,
           Authorization: 'Bearer ' + token
@@ -155,6 +152,8 @@ const AddMovie: React.FC = () => {
         setFormData({
           title: '',
           category: '',
+          review: '',
+          rating: 5,
           releaseDate: ''
         });
   
@@ -187,7 +186,7 @@ const AddMovie: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Cadastrar Novo Filme
+            Cadastrar Nova Review
           </h1>
           <p className="text-gray-600">
             Compartilhe sua experiência cinematográfica com a comunidade
@@ -321,6 +320,49 @@ const AddMovie: React.FC = () => {
               />
             </div>
 
+            {/* Avaliação */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sua Avaliação *
+              </label>
+              <div className="flex items-center space-x-2">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => handleRatingChange(star)}
+                    className={`text-2xl transition duration-200 ${
+                      star <= formData.rating
+                        ? 'text-yellow-400 hover:text-yellow-500'
+                        : 'text-gray-300 hover:text-gray-400'
+                    }`}
+                  >
+                    ★
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-gray-600">
+                  ({formData.rating}/5)
+                </span>
+              </div>
+            </div>
+
+            {/* Review */}
+            <div>
+              <label htmlFor="review" className="block text-sm font-medium text-gray-700 mb-2">
+                Sua Review *
+              </label>
+              <textarea
+                id="review"
+                name="review"
+                required
+                rows={6}
+                value={formData.review}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-none"
+                placeholder="Compartilhe sua opinião sobre o filme, o que você gostou ou não gostou, recomendações..."
+              />
+            </div>
+
             {/* Botões */}
             <div className="flex space-x-4 pt-4">
               <button
@@ -344,7 +386,7 @@ const AddMovie: React.FC = () => {
                     Cadastrando...
                   </div>
                 ) : (
-                  'Cadastrar Filme'
+                  'Cadastrar Review'
                 )}
               </button>
             </div>
@@ -367,4 +409,4 @@ const AddMovie: React.FC = () => {
   );
 };
 
-export default AddMovie; 
+export default AddReview; 
