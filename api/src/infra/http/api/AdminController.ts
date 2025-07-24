@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
-import app from '../../server';
-import User from '../../../entity/User';
-import UserService from '../service/UserService';
-import EnsureUserToken from '../middleware/EnsureUserToken';
 import logger from '../../../service/WinstonLogger';
-import ReviewService from '../service/ReviewService';
+import app from '../../server';
+import EnsureUserToken from '../middleware/EnsureUserToken';
 import MovieService from '../service/MovieService';
+import ReviewService from '../service/ReviewService';
+import UserService from '../service/UserService';
 
 export default class AdminController {
     constructor() {

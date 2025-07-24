@@ -14,6 +14,7 @@ import MovieDetails from './pages/MovieDetails';
 import AllMovies from './pages/AllMovies';
 import AdminDashboard from './pages/AdminDashboard';
 import AddReview from './pages/AddReview';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -92,6 +93,7 @@ function App() {
               />
             </Routes>
           </main>
+          <Footer />
         </div>
       </Router>
     </AuthProvider>

@@ -31,12 +31,10 @@ const MyReviews: React.FC = () => {
   const [sortBy, setSortBy] = useState('newest');
   const { user, token } = useAuth();
 
-  // Dados simulados de reviews
   const [reviews, setReviews] = useState<Review[]>([]);
 
   const categories = ['all', 'Drama', 'Ficção Científica', 'Crime', 'Fantasia', 'Ação', 'Comédia', 'Terror'];
 
-  // Filtrar reviews
   const filteredReviews = reviews.filter(review => {
     const matchesSearch = review.movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          review.review.toLowerCase().includes(searchTerm.toLowerCase());
@@ -44,7 +42,6 @@ const MyReviews: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Ordenar reviews
   const sortedReviews = [...filteredReviews].sort((a, b) => {
     switch (sortBy) {
       case 'newest':
@@ -246,8 +243,8 @@ const MyReviews: React.FC = () => {
                   {/* Imagem do Filme */}
                   <div className="flex-shrink-0">
                     <img
-                      src={process.env.REACT_APP_API_URL + '/' + review.movie.cover.path + '/' + review.movie.cover.name}
-                      alt={review.movie.title}
+                      src={process.env.REACT_APP_API_URL + '/' + review?.movie?.cover?.path + '/' + review?.movie?.cover?.name}
+                      alt={review?.movie?.title}
                       className="w-32 h-48 object-cover rounded-lg shadow-md"
                     />
                   </div>

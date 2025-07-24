@@ -27,17 +27,19 @@ interface User {
 const AllMovies: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const { user, token } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const getMovies = async () => {
+    await axios.get(process.env.REACT_APP_API_URL + '/api/all-movies', {
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    })
+      .then(res => setMovies(res.data))
+      .catch(() => setMovies([]));
+  };
 
   useEffect(() => {
-    const getMovies = async () => {
-      await axios.get(process.env.REACT_APP_API_URL + '/api/all-movies', {
-        headers: {
-          Authorization: 'Bearer ' + token
-        }
-      })
-        .then(res => setMovies(res.data))
-        .catch(() => setMovies([]));
-    };
     getMovies();
   }, []);
 
@@ -60,12 +62,36 @@ const AllMovies: React.FC = () => {
     });
   };
 
+  const filteredMovies = movies.filter(movie => {
+    const matchesSearch = movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         movie.category.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  useEffect(() => {
+    if(searchTerm === '') {
+      getMovies();
+    } else {
+      setMovies(filteredMovies);
+    }
+  }, [searchTerm]);
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-8">
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Todos os Filmes</h1>
           <p className="text-gray-600">Veja todos os filmes e reviews de todos os usuários</p>
+          <div className='flex items-center space-x-4 mt-4'>
+              <input
+                type="text"
+                placeholder="Buscar por título ou review..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+              />
+            </div>
         </div>
         <div className="space-y-6">
           {movies.length > 0 ? (
