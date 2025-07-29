@@ -15,6 +15,9 @@ interface ProfileData {
     reviews: boolean;
   };
   profileImage?: string;
+  profileStats?: number;
+  created_at?: string;
+  bio: string;
 }
 
 const Profile: React.FC = () => {
@@ -35,16 +38,12 @@ const Profile: React.FC = () => {
       push: false,
       reviews: true
     },
-    profileImage: 'https://via.placeholder.com/150x150/6366f1/ffffff?text=CR'
+    profileImage: 'https://via.placeholder.com/150x150/6366f1/ffffff?text=CR',
+    profileStats: 0,
+    bio: 'Gosto de filmes de ação e aventura.'
   });
 
   const profileImageRef = useRef<HTMLInputElement>(null);
-
-  const availableGenres = [
-    'Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica',
-    'Terror', 'Romance', 'Suspense', 'Documentário', 'Animação',
-    'Fantasia', 'Crime', 'Guerra', 'Western', 'Musical'
-  ];
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -53,15 +52,6 @@ const Profile: React.FC = () => {
     setProfileData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleGenreToggle = (genre: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      favoriteGenres: prev.favoriteGenres.includes(genre)
-        ? prev.favoriteGenres.filter(g => g !== genre)
-        : [...prev.favoriteGenres, genre]
     }));
   };
 
@@ -98,6 +88,7 @@ const Profile: React.FC = () => {
       formData.append('id', profileData.id)
       formData.append('name', profileData.name)
       formData.append('email', profileData.email)
+      formData.append('bio', profileData.bio)
       
       if(typeof imageFile === 'object'){
         formData.append('coverPhoto', imageFile)
@@ -109,7 +100,6 @@ const Profile: React.FC = () => {
           Authorization: 'Bearer ' + token
         }
       }).then(res => {
-        console.log(imageFile)
         setProfileData({
           id: user?.id || '',
           name: user?.name || '',
@@ -120,7 +110,8 @@ const Profile: React.FC = () => {
             push: false,
             reviews: true
           },
-          profileImage: imageFile ? URL.createObjectURL(imageFile) : profilePhoto
+          profileImage: imageFile ? URL.createObjectURL(imageFile) : profilePhoto,
+          bio: profileData.bio,
         });
   
         MySwal.fire({
@@ -144,7 +135,6 @@ const Profile: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Restaura dados originais
     setProfileData({
       id: user?.id || '',
       name: user?.name || '',
@@ -155,7 +145,9 @@ const Profile: React.FC = () => {
         push: false,
         reviews: true
       },
-      profileImage: 'https://via.placeholder.com/150x150/6366f1/ffffff?text=CR'
+      profileImage: 'https://via.placeholder.com/150x150/6366f1/ffffff?text=CR',
+      profileStats: 0,
+      bio: ''
     });
     setIsEditing(false);
   };
@@ -167,18 +159,21 @@ const Profile: React.FC = () => {
           'Authorization': 'Bearer ' + token
         }
       }).then(res => {
-        setProfilePhoto(process.env.REACT_APP_API_URL + '/' + res.data.profile_photo.path + '/' + res.data.profile_photo.name)
+        setProfilePhoto(process.env.REACT_APP_API_URL + '/' + res.data.user.profile_photo.path + '/' + res.data.user.profile_photo.name)
         setProfileData({
-          id: res.data.id || '',
-          name: res.data.name || '',
-          email: res.data.email || '',
+          id: res.data.user.id || '',
+          name: res.data.user.name || '',
+          email: res.data.user.email || '',
           favoriteGenres: ['Drama', 'Ação', 'Ficção Científica'],
           notifications: {
             email: true,
             push: false,
             reviews: true
           },
-          profileImage: process.env.REACT_APP_API_URL + '/' + res.data.profile_photo.path + '/' + res.data.profile_photo.name  
+          profileImage: process.env.REACT_APP_API_URL + '/' + res.data.user.profile_photo.path + '/' + res.data.user.profile_photo.name,
+          profileStats: res.data.profileStats,
+          created_at: res.data.user.created_at,
+          bio: res.data.user.bio
         });
       }).catch(res => {
         return null
@@ -187,6 +182,14 @@ const Profile: React.FC = () => {
 
     getProfile();
   }, [])
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-8">
@@ -310,25 +313,19 @@ const Profile: React.FC = () => {
 
             {/* Gêneros Favoritos */}
             <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Gêneros Favoritos</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Bio</h2>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {availableGenres.map(genre => (
-                  <button
-                    key={genre}
-                    onClick={() => isEditing && handleGenreToggle(genre)}
-                    disabled={!isEditing}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition duration-200 ${
-                      profileData.favoriteGenres.includes(genre)
-                        ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-200'
-                        : 'bg-gray-100 text-gray-600 border-2 border-gray-200'
-                    } ${
-                      isEditing ? 'hover:bg-indigo-50 cursor-pointer' : 'cursor-default'
-                    }`}
-                  >
-                    {genre}
-                  </button>
-                ))}
+              <div>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  rows={4}
+                  required
+                  placeholder="Gosto de filmes ..."
+                  value={profileData.bio}
+                  name="bio"
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                />
               </div>
             </div>
           </div>
@@ -342,15 +339,11 @@ const Profile: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Reviews Publicadas</span>
-                  <span className="text-2xl font-bold text-indigo-600">12</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Filmes Avaliados</span>
-                  <span className="text-2xl font-bold text-green-600">45</span>
+                  <span className="text-2xl font-bold text-indigo-600">{profileData?.profileStats}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Membro desde</span>
-                  <span className="text-sm text-gray-500">Jan 2024</span>
+                  <span className="text-sm text-gray-500">{formatDate(profileData?.created_at || '')}</span>
                 </div>
               </div>
             </div>

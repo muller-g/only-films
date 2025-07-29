@@ -41,12 +41,13 @@ export default class UserController {
                 const userId = req.params.id;
 
                 let user = await UserService.getById(userId);
+                let profileStats = await UserService.getProfileStats(userId);
 
                 if(!user) {
                     return res.status(404).json("User not found");
                 }
 
-                return res.status(200).json(user);
+                return res.status(200).json({ user, profileStats });
             } catch(e){
                 return res.status(500).json("Error");
             } 
@@ -73,11 +74,12 @@ export default class UserController {
                         createdUserFile = await ImageFileService.create(imgFile);
                     }
                     
-                    const { name, id } = req.body;
+                    const { name, id, bio } = req.body;
 
                     const updateData: any = {
                         name: name,
                         id: id,
+                        bio: bio
                     };
 
                     if (createdUserFile) {

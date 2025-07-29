@@ -235,7 +235,7 @@ const MyReviews: React.FC = () => {
         </div>
 
         {/* Lista de Reviews */}
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {sortedReviews.length > 0 ? (
             sortedReviews.map(review => (
               <div key={review.id} className="bg-white rounded-2xl shadow-xl p-6">
@@ -251,13 +251,13 @@ const MyReviews: React.FC = () => {
 
                   {/* Conteúdo */}
                   <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex flex-col">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        <Link to={`/movie/${review.movie.id}`} className="hover:underline text-indigo-700">
+                          {review.movie.title}
+                        </Link>
+                      </h3>
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                          <Link to={`/movie/${review.movie.id}`} className="hover:underline text-indigo-700">
-                            {review.movie.title}
-                          </Link>
-                        </h3>
                         <div className="flex items-center space-x-4 mb-2">
                           <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
                             {review.movie.category}
@@ -273,7 +273,7 @@ const MyReviews: React.FC = () => {
                       </div>
                     </div>
 
-                    <p className="text-gray-700 leading-relaxed mb-4">
+                    <p className="text-gray-700 leading-relaxed mb-4 truncate max-w-[250px]">
                       {review.review}
                     </p>
 

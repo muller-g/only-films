@@ -20,8 +20,21 @@ export default class UserService {
                 },
                 data: {
                     name: user.name,
+                    bio: user.bio,
                     ...(user.profile_photo_id && { profile_photo_id: user.profile_photo_id })
                 }
+            });
+        } catch (e: any){
+            return e.message;
+        }
+    }
+
+    static async getProfileStats(userId: string){
+        try {
+            return await prisma.review.count({
+                where: {
+                    user_id: userId
+                },
             });
         } catch (e: any){
             return e.message;
@@ -39,7 +52,8 @@ export default class UserService {
                     name: true,
                     email: true,
                     created_at: true,
-                    profile_photo: true
+                    profile_photo: true,
+                    bio: true,
                 }
             });
         } catch (e: any){

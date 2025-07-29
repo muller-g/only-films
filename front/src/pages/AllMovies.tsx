@@ -16,12 +16,7 @@ interface Movie {
   release_date: string;
   cover: Cover;
   _count: any;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
+  averageRate: number;
 }
 
 const AllMovies: React.FC = () => {
@@ -52,14 +47,6 @@ const AllMovies: React.FC = () => {
         ★
       </span>
     ));
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
   };
 
   const filteredMovies = movies.filter(movie => {
@@ -93,7 +80,7 @@ const AllMovies: React.FC = () => {
               />
             </div>
         </div>
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {movies.length > 0 ? (
             movies.map(movie => (
               <div key={movie.id} className="bg-white rounded-2xl shadow-xl p-6">
@@ -106,13 +93,13 @@ const AllMovies: React.FC = () => {
                     />
                   </div>
                   <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex flex-col">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        <Link to={`/movie/${movie.id}`} className="hover:underline text-indigo-700">
+                          {movie.title}
+                        </Link>
+                      </h3>
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                          <Link to={`/movie/${movie.id}`} className="hover:underline text-indigo-700">
-                            {movie.title}
-                          </Link>
-                        </h3>
                         <div className="flex items-center space-x-4 mb-2">
                           <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
                             {movie.category}
@@ -123,11 +110,11 @@ const AllMovies: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {renderStars(1)}
-                        <span className="text-sm text-gray-600">({1}/5)</span>
+                        {renderStars(movie.averageRate)}
+                        <span className="text-sm text-gray-600">({movie.averageRate.toFixed(1)}/5)</span>
                       </div>
                     </div>
-                    <p className="text-gray-700 leading-relaxed mb-4">
+                    <p className="text-gray-700 leading-relaxed mb-4 mt-4">
                       {"Reviews: " + movie?._count?.reviews}
                     </p>
                   </div>

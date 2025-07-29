@@ -2,6 +2,10 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import useEmblaCarousel from 'embla-carousel-react'
+import '../css/embla.css';
+import EmblaCarousel from '../components/EmblaCarousel';
+import { EmblaOptionsType } from 'embla-carousel'
 
 interface Cover {
   name: string;
@@ -41,13 +45,15 @@ interface Review {
 const MovieDetails: React.FC = () => {
   const { id } = useParams();
   const { user, token } = useAuth();
-
+  const [emblaRef] = useEmblaCarousel()
+  const OPTIONS: EmblaOptionsType = { loop: true }
   const [reviews, setReviews] = useState<Review[]>([]);
   const [movie, setMovie] = useState<any>();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userRating, setUserRating] = useState(5);
   const [userReview, setUserReview] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [similars, setSimilars] = useState([]);
 
   const getMovie = async () => {
     await axios.get(process.env.REACT_APP_API_URL + '/api/movie/' + id, {
@@ -55,11 +61,12 @@ const MovieDetails: React.FC = () => {
         Authorization: 'Bearer ' + token
       }
     })
-      .then(res => {
-        setReviews(res.data.reviews);
-        setMovie(res.data);
-      })
-      .catch(() => setReviews([]));
+    .then(res => {
+      setReviews(res.data.reviews);
+      setMovie(res.data);
+      setSimilars(res.data.similars);
+    })
+    .catch(() => setReviews([]));
   };
   
   useEffect(() => {
@@ -107,69 +114,76 @@ const MovieDetails: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-4 px-2 sm:px-4 lg:px-8 pt-8">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Esquerda: Info do filme e do usuário criador */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center col-span-1 sticky top-20" style={{alignSelf: 'start'}}>
-          {/* Placeholder para imagem do filme */}
-          <div className="w-40 h-60 bg-gray-200 rounded-lg mb-6">
-            <img
-              src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
-              alt={movie?.title}
-              className="w-full h-full object-cover rounded-lg shadow-md"
-            />  
+        <div className="sticky top-20 flex flex-col gap-4" style={{alignSelf: 'start'}}>
+          <div className='w-full p-8 flex flex-col items-center col-span-1 bg-white rounded-2xl shadow-xl '>
+            {/* Placeholder para imagem do filme */}
+            <div className="w-40 h-60 bg-gray-200 rounded-lg mb-6">
+              <img
+                src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
+                alt={movie?.title}
+                className="w-full h-full object-cover rounded-lg shadow-md"
+              />  
+            </div>
+            <h2 className="text-2xl font-bold mb-2">{movie?.title}</h2>
+            <p className="text-gray-600 mb-2">Categoria: <span className="font-medium">{movie?.category}</span></p>
+            <p className="text-gray-600 mb-2">Lançamento: <span className="font-medium">{movie?.release_date}</span></p>
+            {/* Estrelinhas de avaliação (apenas exibição da média) */}
+            <div className="flex items-center space-x-2 mb-4">
+              {[1, 2, 3, 4, 5].map(star => (
+                <span
+                  key={star}
+                  className={`text-2xl ${star <= Math.round(averageRate) ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
+                  ★
+                </span>
+              ))}
+              <span className="ml-2 text-sm text-gray-600">({averageRate?.toFixed(1)}/5)</span>
+            </div>
+            <button
+              className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-200 mb-2"
+              onClick={() => setShowReviewForm(!showReviewForm)}
+            >
+              {showReviewForm ? 'Cancelar' : 'Deixar minha review'}
+            </button>
+            {showReviewForm && (
+              <form onSubmit={handleSubmitReview} className="w-full mt-2">
+                {/* Estrelinhas para voto do usuário */}
+                <div className="flex items-center space-x-2 mb-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => handleRateClick(star)}
+                      className={`text-2xl transition duration-200 ${star <= userRating ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-gray-400'}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                  <span className="ml-2 text-sm text-gray-600">({userRating}/5)</span>
+                </div>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  rows={4}
+                  required
+                  placeholder="Sua review..."
+                  value={userReview}
+                  onChange={e => setUserReview(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition duration-200 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Enviando...' : 'Enviar review'}
+                </button>
+              </form>
+            )}
           </div>
-          <h2 className="text-2xl font-bold mb-2">{movie?.title}</h2>
-          <p className="text-gray-600 mb-2">Categoria: <span className="font-medium">{movie?.category}</span></p>
-          <p className="text-gray-600 mb-2">Lançamento: <span className="font-medium">{movie?.release_date}</span></p>
-          {/* Estrelinhas de avaliação (apenas exibição da média) */}
-          <div className="flex items-center space-x-2 mb-4">
-            {[1, 2, 3, 4, 5].map(star => (
-              <span
-                key={star}
-                className={`text-2xl ${star <= Math.round(averageRate) ? 'text-yellow-400' : 'text-gray-300'}`}
-              >
-                ★
-              </span>
-            ))}
-            <span className="ml-2 text-sm text-gray-600">({averageRate?.toFixed(1)}/5)</span>
+
+          <div className='w-full p-8 flex flex-col items-center col-span-1 bg-white rounded-2xl shadow-xl overflow-hidden'>
+            <h1 className='mb-6'>Filmes Recomendados</h1>
+            <EmblaCarousel slides={similars} options={OPTIONS} />
           </div>
-          <button
-            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-200 mb-2"
-            onClick={() => setShowReviewForm(!showReviewForm)}
-          >
-            {showReviewForm ? 'Cancelar' : 'Deixar minha review'}
-          </button>
-          {showReviewForm && (
-            <form onSubmit={handleSubmitReview} className="w-full mt-2">
-              {/* Estrelinhas para voto do usuário */}
-              <div className="flex items-center space-x-2 mb-2">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => handleRateClick(star)}
-                    className={`text-2xl transition duration-200 ${star <= userRating ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-gray-400'}`}
-                  >
-                    ★
-                  </button>
-                ))}
-                <span className="ml-2 text-sm text-gray-600">({userRating}/5)</span>
-              </div>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                rows={4}
-                required
-                placeholder="Sua review..."
-                value={userReview}
-                onChange={e => setUserReview(e.target.value)}
-              />
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition duration-200 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Enviando...' : 'Enviar review'}
-              </button>
-            </form>
-          )}
         </div>
         {/* Direita: Review do criador no topo, lista de reviews abaixo */}
         <div className="flex flex-col col-span-2">

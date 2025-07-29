@@ -24,6 +24,7 @@ model User {
   profile_photo      ImageFile?    @relation(fields: [profile_photo_id], references: [id], onDelete: Cascade)
   profile_photo_id String?
   role          String        @default("user")
+  bio           String?       @default("")
 }
 
 model ImageFile {

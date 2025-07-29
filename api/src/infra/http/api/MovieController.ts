@@ -53,17 +53,29 @@ export default class MovieController {
             }
         });
 
+        app.post("/api/movie-similars", EnsureUserToken.validate, async (req: Request, res: Response) => {
+            try {
+                const category = req.body.category;
+
+                const movies = await MovieService.getSimilarMovies(category);
+
+                return res.status(200).json(movies);
+            } catch(e){
+                return res.status(500).json("Error");
+            } 
+        });
+
         app.get("/api/movie/:id", EnsureUserToken.validate, async (req: Request, res: Response) => {
-                    try {
-                        const movieId = req.params.id;
+            try {
+                const movieId = req.params.id;
 
-                        const reviews = await MovieService.getById(movieId);
+                const reviews = await MovieService.getById(movieId);
 
-                        return res.status(200).json(reviews);
-                    } catch(e){
-                        return res.status(500).json("Error");
-                    } 
-                });
+                return res.status(200).json(reviews);
+            } catch(e){
+                return res.status(500).json("Error");
+            } 
+        });
 
         app.get("/api/all-movies", EnsureUserToken.validate, async (req: Request, res: Response) => {
             try {

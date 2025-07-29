@@ -33,7 +33,7 @@ export default class MovieService {
 
     static async getById(id: string) {
         try {
-            const movie = await prisma.movie.findUnique({
+            const movie: any = await prisma.movie.findUnique({
                 where: { id },
                 include: {
                     cover: true,
@@ -58,9 +58,24 @@ export default class MovieService {
                 },
             });
 
+            const similars = await prisma.movie.findMany({
+                where: {
+                    category: movie.category,
+
+                },
+                take: 5,
+                include: {
+                    cover: true,
+                    _count: {
+                        select: { reviews: true },
+                    },
+                },
+            });
+
             return {
                 ...movie,
                 total_rate: aggregate._sum.rate ?? 0,
+                similars: similars,
             };
         } catch (e: any) {
             return e.message;
@@ -92,18 +107,52 @@ export default class MovieService {
         }
     }
 
-    static async getAllMovies() {
+    static async getSimilarMovies(category: string) {
         try {
             return await prisma.movie.findMany({
+                where: {
+                    category: category,
+                },
                 include: {
                     cover: true,
                     _count: {
-                        select: {
-                            reviews: true,
-                        },
+                        select: { reviews: true },
                     },
                 },
             });
+        } catch (e: any) {
+            return e.message;
+        }
+    }
+
+    static async getAllMovies() {
+        try {
+            const movies = await prisma.movie.findMany({
+            include: {
+                cover: true,
+                _count: {
+                select: { reviews: true },
+                },
+            },
+            });
+
+            const moviesWithRate = await Promise.all(
+            movies.map(async (movie) => {
+                const rateAggregate = await prisma.review.aggregate({
+                where: { movie_id: movie.id },
+                _avg: {
+                    rate: true,
+                },
+                });
+
+                return {
+                ...movie,
+                averageRate: rateAggregate._avg.rate ?? 0,
+                };
+            })
+            );
+
+            return moviesWithRate;
         } catch (e: any) {
             return e.message;
         }
