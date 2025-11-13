@@ -1,5 +1,6 @@
 import User from "src/entity/User";
 import { prisma } from "../../database/client";
+import bcrypt from "bcrypt";
 
 export default class UserService {
     static async create(user: User){
@@ -23,6 +24,19 @@ export default class UserService {
                     bio: user.bio,
                     ...(user.profile_photo_id && { profile_photo_id: user.profile_photo_id })
                 }
+            });
+        } catch (e: any){
+            return e.message;
+        }
+    }
+
+    static async updatePassword(userId: string, password: string){
+        try {
+            let crypted: string = await bcrypt.hash(password, 8)
+
+            return await prisma.user.update({
+                where: { id: userId },
+                data: { password: crypted }
             });
         } catch (e: any){
             return e.message;
@@ -64,6 +78,16 @@ export default class UserService {
     static async get(){
         try {
             return await prisma.user.findMany({});
+        } catch (e: any){
+            return e.message;
+        }
+    }
+
+    static async getByEmail(email: string){
+        try {
+            return await prisma.user.findUnique({
+                where: { email: email }
+            });
         } catch (e: any){
             return e.message;
         }

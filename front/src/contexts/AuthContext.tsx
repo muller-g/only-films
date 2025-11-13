@@ -7,6 +7,8 @@ interface AuthContextType {
   token: string;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<boolean>;
+  resetNewPassword: (token: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -62,6 +64,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     })
   };
 
+  const resetPassword = async (email: string): Promise<boolean> => {
+    return await axios.post(process.env.REACT_APP_API_URL + '/api/reset-password', {
+      email: email, 
+    }).then(res => {
+      return true
+    }).catch(res => {
+      return false
+    })
+  };
+
+  const resetNewPassword = async (token: string, password: string): Promise<boolean> => {
+    return await axios.post(process.env.REACT_APP_API_URL + '/api/reset-new-password', {
+      user_token: token, 
+      password: password,
+    }).then(res => {
+      return true
+    }).catch(res => {
+      return false
+    })
+  };
+
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -74,6 +97,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    resetPassword,
+    resetNewPassword,
     token
   };
 

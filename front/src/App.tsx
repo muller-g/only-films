@@ -15,6 +15,7 @@ import AllMovies from './pages/AllMovies';
 import AdminDashboard from './pages/AdminDashboard';
 import AddReview from './pages/AddReview';
 import Footer from './components/Footer';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route 
                 path="/dashboard" 
                 element={
