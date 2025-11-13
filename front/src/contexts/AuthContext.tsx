@@ -67,6 +67,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resetPassword = async (email: string): Promise<boolean> => {
     return await axios.post(process.env.REACT_APP_API_URL + '/api/reset-password', {
       email: email, 
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     }).then(res => {
       return true
     }).catch(res => {

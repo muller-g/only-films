@@ -59,24 +59,37 @@ const Login: React.FC = () => {
     navigate('/register');
   };
 
-  const handleSendResetEmail = async () => {
+  const handleSendResetEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
+
     try {
-      const success = await resetPassword(resetEmail);
+      const success = await resetPassword(resetEmail.trim());
+
       if (success) {
         MySwal.fire({
           title: <p>Sucesso</p>,
           text: "Email de recuperação enviado com sucesso!",
           icon: "success"
-        })
+        }).then(() => {
+          setShowModalResetPassword(false);
+          setResetEmail('');
+        });
       } else {
-        setError('Erro ao enviar email de recuperação. Tente novamente.');
+        MySwal.fire({
+          title: <p>Erro</p>,
+          text: "Email não encontrado. Verifique e tente novamente.",
+          icon: "error"
+        });
       }
     } catch (error) {
       MySwal.fire({
         title: <p>Erro</p>,
         text: "Erro ao enviar email de recuperação. Tente novamente.",
         icon: "error"
-      })
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -285,7 +298,6 @@ const Login: React.FC = () => {
             <div className="flex gap-4">
               <button
                 type="submit"
-                onClick={handleSendResetEmail}
                 disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
