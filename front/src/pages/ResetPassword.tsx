@@ -53,7 +53,13 @@ const ResetPassword: React.FC = () => {
     try {
       const success = await resetNewPassword(token, password);
       if (success) {
-        navigate('/login');
+        MySwal.fire({
+          title: <p>Sucesso</p>,
+          text: "Senha redefinida com sucesso!",
+          icon: "success"
+        }).then(() => {
+          navigate('/login');
+        });
       }
     } catch (error) {
       setError('Erro ao fazer login. Tente novamente.');
