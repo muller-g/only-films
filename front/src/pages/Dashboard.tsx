@@ -45,7 +45,7 @@ const Dashboard: React.FC = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Cadastrar Review</h3>
             <p className="text-gray-600">
-              Adicione uma nova review de um filme que você assistiu
+              Adicione uma nova review de um filme ou série que você assistiu
             </p>
           </Link>
 
@@ -68,9 +68,9 @@ const Dashboard: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Cadastrar Filme</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Cadastrar Filmes e Séries</h3>
             <p className="text-gray-600">
-              Cadastre um novo filme para review
+              Cadastre um novo filme ou série para review
             </p>
           </Link>
 
@@ -113,9 +113,9 @@ const Dashboard: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Todos os Filmes</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Todos os Filmes e Séries</h3>
             <p className="text-gray-600">
-              Veja todos os filmes cadastrados na comunidade
+              Veja todos os filmes e séries cadastrados na comunidade
             </p>
           </Link>
           {

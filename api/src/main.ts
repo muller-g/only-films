@@ -5,8 +5,14 @@ import UserController from './infra/http/api/UserController';
 import logger from './service/WinstonLogger';
 import AdminController from './infra/http/api/AdminController';
 import MovieController from './infra/http/api/MovieController';
+import TmdbApiController from './infra/http/api/TmdbApiController';
+import MovieGenresController from './infra/http/api/MovieGenresController';
+import TvGenresController from './infra/http/api/TvGenresController';
 
 new UserController();
+new TmdbApiController();
+new MovieGenresController();
+new TvGenresController();
 new LoginController();
 new ReviewController();
 new AdminController();

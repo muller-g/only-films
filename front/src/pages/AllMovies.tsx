@@ -82,15 +82,25 @@ const AllMovies: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {movies.length > 0 ? (
-            movies.map(movie => (
+            movies.map((movie: any) => (
               <div key={movie.id} className="bg-white rounded-2xl shadow-xl p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-shrink-0">
-                    <img
-                      src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
-                      alt={movie.title}
-                      className="w-32 h-48 object-cover rounded-lg shadow-md"
-                    />
+                    {
+                      movie?.image ? (
+                        <img
+                          src={movie.image}
+                          alt={movie.title}
+                          className="w-32 h-48 object-cover rounded-lg shadow-md"
+                        />
+                      ) : (
+                        <img
+                          src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
+                          alt={movie.title}
+                          className="w-32 h-48 object-cover rounded-lg shadow-md"
+                        />
+                      )
+                    }
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-col">

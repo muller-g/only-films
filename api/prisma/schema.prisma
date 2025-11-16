@@ -43,8 +43,10 @@ model Movie {
   title         String
   release_date  String
   category      String
+  type          String?       @default("movie")
   cover      ImageFile?    @relation(fields: [cover_id], references: [id], onDelete: NoAction)
   cover_id      String?
+  image         String?
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
   reviews       Review[]
@@ -60,4 +62,16 @@ model Review {
   rate          Int
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
+}
+
+model MovieGenre {
+  id            String        @id @default(uuid())
+  name          String
+  tmdb_id       Int
+}
+
+model TvGenre {
+  id            String        @id @default(uuid())
+  name          String
+  tmdb_id       Int
 }

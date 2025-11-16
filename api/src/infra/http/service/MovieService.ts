@@ -8,7 +8,8 @@ export default class MovieService {
                     title: movie.title,
                     category: movie.category,
                     release_date: movie.releaseDate,
-                    cover_id: movie.coverId,
+                    image: movie.image,
+                    type: movie.type,
                 }
             });
         } catch (e: any){
@@ -128,28 +129,28 @@ export default class MovieService {
     static async getAllMovies() {
         try {
             const movies = await prisma.movie.findMany({
-            include: {
-                cover: true,
-                _count: {
-                select: { reviews: true },
+                include: {
+                    cover: true,
+                    _count: {
+                        select: { reviews: true },
+                    },
                 },
-            },
             });
 
             const moviesWithRate = await Promise.all(
-            movies.map(async (movie) => {
-                const rateAggregate = await prisma.review.aggregate({
-                where: { movie_id: movie.id },
-                _avg: {
-                    rate: true,
-                },
-                });
+                movies.map(async (movie) => {
+                    const rateAggregate = await prisma.review.aggregate({
+                        where: { movie_id: movie.id },
+                        _avg: {
+                            rate: true,
+                        },
+                    });
 
-                return {
-                ...movie,
-                averageRate: rateAggregate._avg.rate ?? 0,
-                };
-            })
+                    return {
+                        ...movie,
+                        averageRate: rateAggregate._avg.rate ?? 0,
+                    };
+                })
             );
 
             return moviesWithRate;

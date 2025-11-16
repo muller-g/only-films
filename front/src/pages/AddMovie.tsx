@@ -11,6 +11,8 @@ interface MovieFormData {
   releaseDate: string;
   coverImage?: string;
   movieId?: string;
+  image?: string;
+  type: string;
 }
 
 const AddMovie: React.FC = () => {
@@ -22,14 +24,17 @@ const AddMovie: React.FC = () => {
     title: '',
     category: '',
     releaseDate: '',
-    movieId: ''
+    movieId: '',
+    image: '',
+    type: 'movie'
   });
   const MySwal = withReactContent(Swal)
   const coverImageRef = useRef<HTMLInputElement>(null);
   const [movieSuggestions, setMovieSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [foundMovies, setFoundMovies] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
-  // Busca filmes existentes conforme o título digitado
   useEffect(() => {
     const fetchMovies = async () => {
       if (formData.title.length < 3 || formData.title.length % 3 !== 0) {
@@ -50,9 +55,37 @@ const AddMovie: React.FC = () => {
     fetchMovies();
   }, [formData.title]);
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const res = await axios.get(process.env.REACT_APP_API_URL + `/api/get-${formData.type}-genres`, {
+        headers: {
+          Authorization: 'Bearer ' + token
+        }
+      });
+
+      setCategories(res.data);
+    };
+    fetchCategories();
+  }, [formData.type]);
+
+  const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, title: e.target.value }));
-    setShowSuggestions(true);
+
+    if(e.target.value.length >= 3) {
+      await axios.post(process.env.REACT_APP_API_URL + '/api/search-content', {
+        search: e.target.value,
+        type: formData.type
+      }, 
+      {
+        headers: {
+          Authorization: 'Bearer ' + token
+        }
+      }).then(res => {
+        setFoundMovies(res.data.results);
+      });
+
+      setShowSuggestions(true);
+    }    
   };
 
   const handleSuggestionClick = (movie: any) => {
@@ -63,7 +96,9 @@ const AddMovie: React.FC = () => {
       category: movie.category || '',
       releaseDate: movie.release_date || '',
       coverImage: process.env.REACT_APP_API_URL + '/' + movie.cover.path + '/' + movie.cover.name || '',
+      image: movie.poster_path || '',
     }));
+
     setShowSuggestions(false);
     if (movie.coverImage) {
       setImageFile(null);
@@ -73,11 +108,22 @@ const AddMovie: React.FC = () => {
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
+    setFormData({
+      title: '',
+      category: '',
+      releaseDate: '',
+      movieId: '',
+      type: '',
+      image: ''
+    });
+
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+
+    setFoundMovies([])
   };
 
   const handleReleaseDateChange = (
@@ -137,46 +183,26 @@ const AddMovie: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      let uploadData = new FormData;
-      let contentType = 'multipart/form-data'
-
-      if(formData.movieId !== ''){
-
-        MySwal.fire({
-          title: <p>Aviso</p>,
-          text: "Filme ja existe na base de dados.",
-          icon: "warning",
-        }).then(() => {
-          setFormData(prev => ({
-              ...prev,
-              title: '',
-              category: '',
-              releaseDate: '',
-              coverImage: '',
-            }));
-
-            setImageFile(null);
-        });
-
-        return;
+      let uploadData = {
+        title: formData.title,
+        category: formData.category,
+        releaseDate: formData.releaseDate,
+        userId: user?.id,
+        image: formData.image
       }
-
-      uploadData.append('title', formData.title)
-      uploadData.append('category', formData.category)
-      uploadData.append('releaseDate', formData.releaseDate)
-      uploadData.append('userId', user?.id)
-      uploadData.append('coverPhoto', imageFile)
 
       await axios.post(process.env.REACT_APP_API_URL + '/api/create-movie', uploadData, {
         headers: {
-          "Content-Type": contentType,
+          "Content-Type": 'application/json',
           Authorization: 'Bearer ' + token
         }
       }).then(res => {
         setFormData({
           title: '',
           category: '',
-          releaseDate: ''
+          releaseDate: '',
+          type: 'movie',
+          image: ''
         });
   
         MySwal.fire({
@@ -196,11 +222,39 @@ const AddMovie: React.FC = () => {
     }
   };
 
-  const categories = [
-    'Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica',
-    'Terror', 'Romance', 'Suspense', 'Documentário', 'Animação',
-    'Fantasia', 'Crime', 'Guerra', 'Western', 'Musical'
-  ];
+  const handleMovieSelect = (movie: any, i: number) => {
+    setFormData(prev => ({
+      ...prev,
+      movieId: movie.id,
+      title: formData.type === 'movie' ? movie.title : movie.name,
+      category: movie.genre_ids[0] || '',
+      releaseDate: formData.type === 'movie' ? movie?.release_date?.split('-')[0] : movie?.first_air_date?.split('-')[0],
+      coverImage: '',
+      image: formData.type === 'movie' ? 'https://image.tmdb.org/t/p/w200' + movie?.poster_path : 'https://image.tmdb.org/t/p/w200' + movie?.poster_path,
+    }));
+
+    let moviesDiv = document.querySelectorAll('#movie-opt');
+    
+    moviesDiv.forEach((item: any) => {
+      item.classList.remove('border-indigo-500');
+      item.classList.remove('bg-indigo-100');
+      item.classList.remove('border-2');
+      item.classList.remove('border-dashed');
+      item.classList.remove('border-gray-300');
+      item.classList.remove('rounded-lg');
+      item.classList.remove('shadow-lg');
+      item.classList.remove('shadow-indigo-500');
+    });
+    
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('bg-indigo-100');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('border-indigo-500');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('border-2');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('border-dashed');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('border-gray-300');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('rounded-lg');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('shadow-lg');
+    document.querySelectorAll('#movie-opt')[i]?.classList.add('shadow-indigo-500');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 pt-20">
@@ -218,63 +272,45 @@ const AddMovie: React.FC = () => {
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Foto de Capa */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Foto de Capa
+                Você quer cadastrar filme ou série?
               </label>
-              <div 
-                className="relative w-full h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-indigo-400 transition duration-200"
-                onClick={handleCoverImageClick}
-              >
-                {formData.coverImage ? (
-                  <div className="relative w-full h-full">
-                    <img
-                      src={formData.coverImage}
-                      alt="Capa do filme"
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition duration-200">
-                      <div className="text-white opacity-0 hover:opacity-100 transition duration-200">
-                        <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-sm">Alterar imagem</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : imageFile ? (
-                  <div className="relative w-full h-full">
-                    <img
-                      src={URL.createObjectURL(imageFile)}
-                      alt="Capa do filme"
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition duration-200">
-                      <div className="text-white opacity-0 hover:opacity-100 transition duration-200">
-                        <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-sm">Alterar imagem</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-gray-600">Clique para adicionar uma foto de capa</p>
-                    <p className="text-sm text-gray-500 mt-1">PNG, JPG até 1MB</p>
-                  </div>
-                )}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="movie"
+                    name="type"
+                    value="movie"
+                    checked={formData.type === 'movie'}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="movie" className="ml-2 text-sm font-medium text-gray-700">
+                    Filme
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="tv"
+                    name="type"
+                    value="tv"
+                    checked={formData.type === 'tv'}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="series" className="ml-2 text-sm font-medium text-gray-700">
+                    Série
+                  </label>
+                </div>
               </div>
             </div>
 
-            {/* Título do Filme */}
             <div className="relative">
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                Título do Filme *
+                Título *
               </label>
               <input
                 type="text"
@@ -304,6 +340,17 @@ const AddMovie: React.FC = () => {
               )}
             </div>
 
+            <div className='grid grid-cols-4 gap-4 align-top'>
+              {
+                foundMovies?.map((movie, i) => (
+                  <div id='movie-opt' key={movie.id} onClick={() => handleMovieSelect(movie, i)} className='text-center flex flex-col items-center justify-start cursor-pointer hover:scale-105 transition-all max-w-[150px] max-h-[250px] duration-300 whitespace-normal'>
+                    <img width={100} src={'https://image.tmdb.org/t/p/w200' + movie.poster_path} alt={'teste'} />
+                    <span>{ formData.type === 'movie' ? movie.title : movie.name}</span>
+                  </div>
+                ))
+              }
+            </div>
+
             {/* Categoria */}
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
@@ -313,14 +360,15 @@ const AddMovie: React.FC = () => {
                 id="category"
                 name="category"
                 required
-                value={formData.category}
+                value={categories.find(category => category.tmdb_id === formData.category)?.name || ''}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                disabled={true}
               >
                 <option value="">Selecione uma categoria</option>
                 {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category}
+                  <option key={category.tmdb_id} value={category.name}>
+                    {category.name}
                   </option>
                 ))}
               </select>

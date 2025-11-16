@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { createMulter } from '../../../service/multer';
 import logger from '../../../service/WinstonLogger';
 import app from '../../server';
 import EnsureUserToken from '../middleware/EnsureUserToken';
-import ImageFileService from '../service/ImageFileService';
 import MovieService from '../service/MovieService';
+import MovieGenreService from '../service/MovieGenreService';
+import TvGenreService from '../service/TvGenreService';
 
 export default class MovieController {
     constructor() {
@@ -14,38 +14,23 @@ export default class MovieController {
     private initializeRoutes() {
         logger.info("Movie routes start");
 
-        app.post("/api/create-movie", EnsureUserToken.validate, async (req: Request, res: Response) => {
+        app.post("/api/create-movie", EnsureUserToken.validate, async (req: any, res: Response) => {
             try {
-                const uploadMiddleware = createMulter((req: any) => {
-                    const movieName = req.body.title.normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, '')
-                    .replace(/[^a-zA-Z0-9 ]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '_')
-                    .toLowerCase();
+                let { image, type, category, title, releaseDate } = req.body;
 
-                    return `uploads/movies/${movieName}`;
-                }).single('coverPhoto');
+                let movieCategory = await MovieGenreService.getByTmdbId(category);
                 
-                uploadMiddleware(req, res, async (err) => {
-                    let reqFile: any = req.file;
+                if(type === 'tv'){
+                    movieCategory = await TvGenreService.getByTmdbId(category);
+                }
 
-                    let imgFile = {
-                        name: reqFile.filename,
-                        path: reqFile.destination,
-                        originalName: reqFile.originalname
-                    };
-
-                    let createdCoverFile = await ImageFileService.create(imgFile);
-
-                    await MovieService.create({
-                        title: req.body.title,
-                        category: req.body.category,
-                        releaseDate: req.body.releaseDate,
-                        coverId: createdCoverFile.id
-                    });
+                await MovieService.create({
+                    title: title,
+                    category: movieCategory?.name,
+                    releaseDate: releaseDate,
+                    image: image,
+                    type: type
                 });
-                
 
                 return res.status(200).json({message: "Movie created successfully"});
             } catch(e){

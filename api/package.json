@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./src/main.ts"
+    "dev": "nodemon ./src/main.ts",
+    "get-genres": "ts-node -r dotenv/config ./src/commands/getGenresApiMovie.ts"
   },
   "keywords": [],
   "author": "mullerg",
@@ -24,6 +25,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
+    "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

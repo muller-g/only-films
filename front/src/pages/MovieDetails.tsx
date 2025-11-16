@@ -31,6 +31,8 @@ interface Movie {
   title: string;
   release_date: string;
   cover: Cover;
+  image: string;
+  type: string;
 }
 
 interface Review {
@@ -118,11 +120,21 @@ const MovieDetails: React.FC = () => {
           <div className='w-full p-8 flex flex-col items-center col-span-1 bg-white rounded-2xl shadow-xl '>
             {/* Placeholder para imagem do filme */}
             <div className="w-40 h-60 bg-gray-200 rounded-lg mb-6">
-              <img
-                src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
-                alt={movie?.title}
-                className="w-full h-full object-cover rounded-lg shadow-md"
-              />  
+              {
+                movie?.image ? (
+                  <img
+                    src={movie?.image}
+                    alt={movie?.title}
+                    className="w-full h-full object-cover rounded-lg shadow-md"
+                  />
+                ) : (
+                  <img
+                    src={process.env.REACT_APP_API_URL + '/' + movie?.cover?.path + '/' + movie?.cover?.name}
+                    alt={movie?.title}
+                    className="w-full h-full object-cover rounded-lg shadow-md"
+                  />
+                )
+              }
             </div>
             <h2 className="text-2xl font-bold mb-2">{movie?.title}</h2>
             <p className="text-gray-600 mb-2">Categoria: <span className="font-medium">{movie?.category}</span></p>

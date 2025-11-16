@@ -13,6 +13,8 @@ interface MovieFormData {
   rating: number;
   coverImage?: string;
   movieId?: string;
+  image?: string;
+  type: string;
 }
 
 const AddReview: React.FC = () => {
@@ -26,7 +28,9 @@ const AddReview: React.FC = () => {
     review: '',
     rating: 5,
     releaseDate: '',
-    movieId: ''
+    movieId: '',
+    image: '',
+    type: 'movie'
   });
   const MySwal = withReactContent(Swal)
   const coverImageRef = useRef<HTMLInputElement>(null);
@@ -60,13 +64,24 @@ const AddReview: React.FC = () => {
   };
 
   const handleSuggestionClick = (movie: any) => {
+    console.log(movie);
+    let image = '';
+    if (movie.cover && movie.cover.path && movie.cover.name) {
+      // Quando tem cover, usa o objeto cover
+      image = process.env.REACT_APP_API_URL + '/' + movie.cover.path + '/' + movie.cover.name;
+    } else if (movie.image) {
+      // Quando não tem cover, usa a propriedade image
+      image = movie.image;
+    }
+
     setFormData(prev => ({
       ...prev,
       movieId: movie.id,
       title: movie.title,
       category: movie.category || '',
       releaseDate: movie.release_date || '',
-      coverImage: process.env.REACT_APP_API_URL + '/' + movie.cover.path + '/' + movie.cover.name || '',
+      coverImage: image,
+      type: 'movie'
     }));
     setShowSuggestions(false);
     if (movie.coverImage) {
@@ -175,7 +190,9 @@ const AddReview: React.FC = () => {
           category: '',
           review: '',
           rating: 5,
-          releaseDate: ''
+          releaseDate: '',
+          image: '',
+          type: 'movie'
         });
   
         MySwal.fire({
@@ -217,59 +234,20 @@ const AddReview: React.FC = () => {
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Foto de Capa */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Foto de Capa
-              </label>
-              <div 
-                className="relative w-full h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-indigo-400 transition duration-200"
-                onClick={handleCoverImageClick}
-              >
-                {formData.coverImage ? (
-                  <div className="relative w-full h-full">
-                    <img
-                      src={formData.coverImage}
-                      alt="Capa do filme"
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition duration-200">
-                      <div className="text-white opacity-0 hover:opacity-100 transition duration-200">
-                        <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-sm">Alterar imagem</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : imageFile ? (
-                  <div className="relative w-full h-full">
-                    <img
-                      src={URL.createObjectURL(imageFile)}
-                      alt="Capa do filme"
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition duration-200">
-                      <div className="text-white opacity-0 hover:opacity-100 transition duration-200">
-                        <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-sm">Alterar imagem</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-gray-600">Clique para adicionar uma foto de capa</p>
-                    <p className="text-sm text-gray-500 mt-1">PNG, JPG até 1MB</p>
-                  </div>
-                )}
+            {formData.coverImage && (
+              <div>
+                <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.type === 'movie' ? 'Imagem do Filme' : 'Imagem da Série'}
+                </label>
+                <div className="flex justify-center">
+                  <img 
+                    src={formData.coverImage} 
+                    alt={formData.title || 'Imagem do Filme'} 
+                    className="max-w-[200px] max-h-[300px] object-cover rounded-lg shadow-md" 
+                  />
+                </div>
               </div>
-            </div>
-
+            )}
             {/* Título do Filme */}
             <div className="relative">
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
