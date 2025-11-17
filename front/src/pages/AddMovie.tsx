@@ -36,26 +36,6 @@ const AddMovie: React.FC = () => {
   const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchMovies = async () => {
-      if (formData.title.length < 3 || formData.title.length % 3 !== 0) {
-        setMovieSuggestions([]);
-        return;
-      }
-      try {
-        const res = await axios.get(process.env.REACT_APP_API_URL + '/api/search-movies?title=' + encodeURIComponent(formData.title), {
-          headers: {
-            Authorization: 'Bearer ' + token
-          }
-        });
-        setMovieSuggestions(res.data);
-      } catch {
-        setMovieSuggestions([]);
-      }
-    };
-    fetchMovies();
-  }, [formData.title]);
-
-  useEffect(() => {
     const fetchCategories = async () => {
       const res = await axios.get(process.env.REACT_APP_API_URL + `/api/get-${formData.type}-genres`, {
         headers: {
