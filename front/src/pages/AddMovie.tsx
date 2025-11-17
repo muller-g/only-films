@@ -13,6 +13,7 @@ interface MovieFormData {
   movieId?: string;
   image?: string;
   type: string;
+  id?: string;
 }
 
 const AddMovie: React.FC = () => {
@@ -26,7 +27,8 @@ const AddMovie: React.FC = () => {
     releaseDate: '',
     movieId: '',
     image: '',
-    type: 'movie'
+    type: 'movie',
+    id: ''
   });
   const MySwal = withReactContent(Swal)
   const coverImageRef = useRef<HTMLInputElement>(null);
@@ -77,6 +79,7 @@ const AddMovie: React.FC = () => {
       releaseDate: movie.release_date || '',
       coverImage: process.env.REACT_APP_API_URL + '/' + movie.cover.path + '/' + movie.cover.name || '',
       image: movie.poster_path || '',
+      id: movie.id
     }));
 
     setShowSuggestions(false);
@@ -94,7 +97,8 @@ const AddMovie: React.FC = () => {
       releaseDate: '',
       movieId: '',
       type: '',
-      image: ''
+      image: '',
+      id: ''
     });
 
     const { name, value } = e.target;
@@ -169,7 +173,8 @@ const AddMovie: React.FC = () => {
         releaseDate: formData.releaseDate,
         userId: user?.id,
         image: formData.image,
-        type: formData.type
+        type: formData.type,
+        id: formData.movieId
       }
 
       await axios.post(process.env.REACT_APP_API_URL + '/api/create-movie', uploadData, {
@@ -183,7 +188,8 @@ const AddMovie: React.FC = () => {
           category: '',
           releaseDate: '',
           type: 'movie',
-          image: ''
+          image: '',
+          id: ''
         });
   
         MySwal.fire({
@@ -212,6 +218,7 @@ const AddMovie: React.FC = () => {
       releaseDate: formData.type === 'movie' ? movie?.release_date?.split('-')[0] : movie?.first_air_date?.split('-')[0],
       coverImage: '',
       image: formData.type === 'movie' ? 'https://image.tmdb.org/t/p/w200' + movie?.poster_path : 'https://image.tmdb.org/t/p/w200' + movie?.poster_path,
+      id: movie.id
     }));
 
     let moviesDiv = document.querySelectorAll('#movie-opt');

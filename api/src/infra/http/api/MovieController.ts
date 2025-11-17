@@ -16,7 +16,13 @@ export default class MovieController {
 
         app.post("/api/create-movie", EnsureUserToken.validate, async (req: any, res: Response) => {
             try {
-                let { image, type, category, title, releaseDate } = req.body;
+                let { image, type, category, title, releaseDate, id } = req.body;
+
+                let movie = await MovieService.getByTmdbId(id);
+
+                if(movie){
+                    return res.status(200).json({message: "Movie created successfully"});
+                }
 
                 let movieCategory = await MovieGenreService.getByTmdbId(category);
                 
@@ -29,7 +35,8 @@ export default class MovieController {
                     category: movieCategory?.name,
                     releaseDate: releaseDate,
                     image: image,
-                    type: type
+                    type: type,
+                    tmdb_id: id
                 });
 
                 return res.status(200).json({message: "Movie created successfully"});

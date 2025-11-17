@@ -10,6 +10,7 @@ export default class MovieService {
                     release_date: movie.releaseDate,
                     image: movie.image,
                     type: movie.type,
+                    tmdb_id: movie.tmdb_id,
                 }
             });
         } catch (e: any){
@@ -26,6 +27,16 @@ export default class MovieService {
                         mode: "insensitive"
                     }
                 }
+            });
+        } catch (e: any){
+            return e.message;
+        }
+    }
+
+    static async getByTmdbId(tmdb_id: number) {
+        try {
+            return await prisma.movie.findFirst({
+                where: { tmdb_id: tmdb_id },
             });
         } catch (e: any){
             return e.message;

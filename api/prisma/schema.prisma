@@ -46,6 +46,7 @@ model Movie {
   type          String?       @default("movie")
   cover      ImageFile?    @relation(fields: [cover_id], references: [id], onDelete: NoAction)
   cover_id      String?
+  tmdb_id       Int?
   image         String?
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
