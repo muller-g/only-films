@@ -15,6 +15,8 @@ interface Movie {
   title: string;
   release_date: string;
   cover: Cover;
+  image: string;
+  type: string;
 }
 
 interface Review {
@@ -29,17 +31,19 @@ const MyReviews: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [selectedType, setSelectedType] = useState('all');
   const { user, token } = useAuth();
 
   const [reviews, setReviews] = useState<Review[]>([]);
-
-  const categories = ['all', 'Drama', 'Ficção Científica', 'Crime', 'Fantasia', 'Ação', 'Comédia', 'Terror'];
+  const [movieCategories, setMovieCategories] = useState<[]>([]);
+  const [tvCategories, setTvCategories] = useState<[]>([]);
 
   const filteredReviews = reviews.filter(review => {
     const matchesSearch = review.movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          review.review.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || review.movie.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesType = selectedType === 'all' || review.movie.type === selectedType;
+    return matchesSearch && matchesCategory && matchesType;
   });
 
   const sortedReviews = [...filteredReviews].sort((a, b) => {
@@ -89,7 +93,29 @@ const MyReviews: React.FC = () => {
       })
     }
 
+    const getTvCategories = async () => {
+      await axios.get(process.env.REACT_APP_API_URL + '/api/get-tv-genres', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      }).then(res => {
+        setTvCategories(res.data)
+      })
+    }
+
+    const getMovieCategories = async () => {
+      await axios.get(process.env.REACT_APP_API_URL + '/api/get-movie-genres', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      }).then(res => {
+        setMovieCategories(res.data)
+      })
+    }
+
     getReviews();
+    getMovieCategories();
+    getTvCategories();
   }, [])
 
   return (
@@ -117,9 +143,9 @@ const MyReviews: React.FC = () => {
 
         {/* Filtros e Busca */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             {/* Busca */}
-            <div>
+            <div className="w-full md:w-1/2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Buscar
               </label>
@@ -132,26 +158,63 @@ const MyReviews: React.FC = () => {
               />
             </div>
 
-            {/* Filtro por Categoria */}
-            <div>
+            <div className="w-full md:w-1/5">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Categoria
+                Tipo
               </label>
               <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category === 'all' ? 'Todas as categorias' : category}
-                  </option>
-                ))}
+                <option value="all">Todos</option>
+                <option value="movie">Filme</option>
+                <option value="tv">Série</option>
               </select>
             </div>
 
+            {
+              selectedType === 'movie' ? (
+                <div className="w-full md:w-1/5">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Categoria
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                  >
+                    <option value="all">Todos</option>
+                    {movieCategories.map((category: any) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="w-full md:w-1/5">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Categoria
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                  >
+                    <option value="all">Todos</option>
+                    {tvCategories.map((category: any) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )
+            }
+
             {/* Ordenação */}
-            <div>
+            <div className="w-full md:w-1/5">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ordenar por
               </label>
@@ -242,11 +305,21 @@ const MyReviews: React.FC = () => {
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Imagem do Filme */}
                   <div className="flex-shrink-0">
-                    <img
-                      src={process.env.REACT_APP_API_URL + '/' + review?.movie?.cover?.path + '/' + review?.movie?.cover?.name}
-                      alt={review?.movie?.title}
-                      className="w-32 h-48 object-cover rounded-lg shadow-md"
-                    />
+                    {
+                      review?.movie?.image ? (
+                        <img
+                          src={review?.movie?.image}
+                          alt={review?.movie?.title}
+                          className="w-32 h-48 object-cover rounded-lg shadow-md"
+                        />
+                      ) : (
+                        <img
+                          src={process.env.REACT_APP_API_URL + '/' + review?.movie?.cover?.path + '/' + review?.movie?.cover?.name}
+                          alt={review?.movie?.title}
+                          className="w-32 h-48 object-cover rounded-lg shadow-md"
+                        />
+                      )
+                    }
                   </div>
 
                   {/* Conteúdo */}

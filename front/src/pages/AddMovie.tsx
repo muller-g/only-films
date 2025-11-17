@@ -188,7 +188,8 @@ const AddMovie: React.FC = () => {
         category: formData.category,
         releaseDate: formData.releaseDate,
         userId: user?.id,
-        image: formData.image
+        image: formData.image,
+        type: formData.type
       }
 
       await axios.post(process.env.REACT_APP_API_URL + '/api/create-movie', uploadData, {
