@@ -17,6 +17,7 @@ export default class MovieController {
         app.post("/api/create-movie", EnsureUserToken.validate, async (req: any, res: Response) => {
             try {
                 let { image, type, category, title, releaseDate, id } = req.body;
+                const userId = req.context?.user?.id;
 
                 let movie = await MovieService.getByTmdbId(id);
 
@@ -36,7 +37,8 @@ export default class MovieController {
                     releaseDate: releaseDate,
                     image: image,
                     type: type,
-                    tmdb_id: id
+                    tmdb_id: id,
+                    addedById: userId
                 });
 
                 return res.status(200).json({message: "Movie created successfully"});

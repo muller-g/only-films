@@ -11,6 +11,7 @@ export default class MovieService {
                     image: movie.image,
                     type: movie.type,
                     tmdb_id: movie.tmdb_id,
+                    added_by_id: movie.addedById || null,
                 }
             });
         } catch (e: any){
@@ -49,6 +50,9 @@ export default class MovieService {
                 where: { id },
                 include: {
                     cover: true,
+                    added_by: {
+                        select: { id: true, name: true, profile_photo: true },
+                    },
                     reviews: {
                         include: {
                             user: {
@@ -142,6 +146,9 @@ export default class MovieService {
             const movies = await prisma.movie.findMany({
                 include: {
                     cover: true,
+                    added_by: {
+                        select: { id: true, name: true },
+                    },
                     _count: {
                         select: { reviews: true },
                     },

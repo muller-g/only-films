@@ -21,6 +21,7 @@ model User {
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
   Reviews       Review[]
+  MoviesAdded   Movie[]       @relation("MovieAddedBy")
   profile_photo      ImageFile?    @relation(fields: [profile_photo_id], references: [id], onDelete: Cascade)
   profile_photo_id String?
   role          String        @default("user")
@@ -51,6 +52,8 @@ model Movie {
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
   reviews       Review[]
+  added_by_id   String?
+  added_by      User?         @relation("MovieAddedBy", fields: [added_by_id], references: [id], onDelete: SetNull)
 }
 
 model Review {
@@ -61,6 +64,7 @@ model Review {
   movie_id      String
   review        String
   rate          Int
+  season_number Int?
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
 }

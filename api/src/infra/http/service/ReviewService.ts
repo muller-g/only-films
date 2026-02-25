@@ -9,6 +9,7 @@ export default class ReviewService {
                     movie_id: review.movieId,
                     review: review.review,
                     rate: review.rate,
+                    season_number: review.seasonNumber != null ? parseInt(String(review.seasonNumber)) : null,
                 }
             });
         } catch (e: any){

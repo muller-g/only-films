@@ -25,7 +25,8 @@ export default class ReviewController {
                         userId: req.body.userId,
                         movieId: existsMovie.id,
                         review: req.body.review,
-                        rate: parseInt(req.body.rate)
+                        rate: parseInt(req.body.rate),
+                        seasonNumber: req.body.seasonNumber != null ? req.body.seasonNumber : null
                     };
                     
                     await ReviewService.create(review);
@@ -57,14 +58,16 @@ export default class ReviewController {
                             title: req.body.title,
                             category: req.body.category,
                             releaseDate: req.body.releaseDate,
-                            coverId: createdCoverFile.id
+                            coverId: createdCoverFile.id,
+                            addedById: req.body.userId
                         });
 
                         await ReviewService.create({
                             userId: req.body.userId,
                             movieId: createdMovie.id,
                             review: req.body.review,
-                            rate: parseInt(req.body.rate)
+                            rate: parseInt(req.body.rate),
+                            seasonNumber: req.body.seasonNumber != null ? req.body.seasonNumber : null
                         });
                     });
                 }
@@ -132,6 +135,16 @@ export default class ReviewController {
             } catch(e){
                 return res.status(500).json("Error");
             } 
+        });
+
+        app.get("/api/review/:movieId", EnsureUserToken.validate, async (req: Request, res: Response) => {
+            try {
+                const movieId = req.params.movieId;
+                const reviews = await ReviewService.getReview(movieId);
+                return res.status(200).json(reviews || []);
+            } catch(e){
+                return res.status(500).json("Error");
+            }
         });
 
         app.get("/api/search-movies", EnsureUserToken.validate, async (req: Request, res: Response) => {
