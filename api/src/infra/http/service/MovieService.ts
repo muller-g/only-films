@@ -2,20 +2,24 @@ import { prisma } from "../../database/client";
 
 export default class MovieService {
     static async create(movie: any){
+        const data = {
+            title: movie.title,
+            category: movie.category,
+            release_date: movie.releaseDate,
+            image: movie.image,
+            type: movie.type,
+            tmdb_id: movie.tmdb_id,
+            added_by_id: movie.addedById || null,
+        };
+
         try {
-            return await prisma.movie.create({
-                data: {
-                    title: movie.title,
-                    category: movie.category,
-                    release_date: movie.releaseDate,
-                    image: movie.image,
-                    type: movie.type,
-                    tmdb_id: movie.tmdb_id,
-                    added_by_id: movie.addedById || null,
-                }
-            });
-        } catch (e: any){
-            return e.message;
+            return await prisma.movie.create({ data });
+        } catch (e: any) {
+            // FK violation on added_by_id (stale JWT after DB reset): retry without it
+            if (e.code === 'P2003') {
+                return await prisma.movie.create({ data: { ...data, added_by_id: null } });
+            }
+            throw e;
         }
     }
 

@@ -7,7 +7,8 @@
     "dev": "nodemon ./src/main.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
-    "get-genres": "ts-node -r dotenv/config ./src/commands/getGenresApiMovie.ts"
+    "get-genres": "ts-node -r dotenv/config ./src/commands/getGenresApiMovie.ts",
+    "get-genres:prod": "node dist/commands/getGenresApiMovie.js"
   },
   "keywords": [],
   "author": "mullerg",

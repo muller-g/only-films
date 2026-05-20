@@ -24,7 +24,15 @@ interface Review {
   movie: Movie;
   rate: number;
   review: string;
+  season_number: number | null;
   created_at: string;
+}
+
+interface MovieReviewGroup {
+  movie: Movie;
+  general: Review | null;
+  seasons: Review[];
+  latestAt: string;
 }
 
 const MyReviews: React.FC = () => {
@@ -38,29 +46,6 @@ const MyReviews: React.FC = () => {
   const [movieCategories, setMovieCategories] = useState<[]>([]);
   const [tvCategories, setTvCategories] = useState<[]>([]);
 
-  const filteredReviews = reviews.filter(review => {
-    const matchesSearch = review.movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         review.review.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || review.movie.category === selectedCategory;
-    const matchesType = selectedType === 'all' || review.movie.type === selectedType;
-    return matchesSearch && matchesCategory && matchesType;
-  });
-
-  const sortedReviews = [...filteredReviews].sort((a, b) => {
-    switch (sortBy) {
-      case 'newest':
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case 'oldest':
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      case 'rating':
-        return b.rate - a.rate;
-      case 'title':
-        return a.movie.title.localeCompare(b.movie.title);
-      default:
-        return 0;
-    }
-  });
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -71,52 +56,98 @@ const MyReviews: React.FC = () => {
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, index) => (
-      <span
-        key={index}
-        className={`text-lg ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}
-      >
-        ★
-      </span>
+      <span key={index} className={`text-lg ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
     ));
   };
+
+  // Group individual review records by movie, separating general from seasons
+  const buildGroups = (source: Review[]): MovieReviewGroup[] => {
+    const map: Record<string, MovieReviewGroup> = {};
+
+    source.forEach(review => {
+      const movieId = review.movie.id;
+      if (!map[movieId]) {
+        map[movieId] = { movie: review.movie, general: null, seasons: [], latestAt: review.created_at };
+      }
+      if (review.season_number === null) {
+        map[movieId].general = review;
+      } else {
+        map[movieId].seasons.push(review);
+      }
+      if (new Date(review.created_at) > new Date(map[movieId].latestAt)) {
+        map[movieId].latestAt = review.created_at;
+      }
+    });
+
+    Object.values(map).forEach(group => {
+      group.seasons.sort((a, b) => (a.season_number ?? 0) - (b.season_number ?? 0));
+    });
+
+    return Object.values(map);
+  };
+
+  const filteredReviews = reviews.filter(review => {
+    const matchesSearch =
+      review.movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      review.review.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || review.movie.category === selectedCategory;
+    const matchesType = selectedType === 'all' || review.movie.type === selectedType;
+    return matchesSearch && matchesCategory && matchesType;
+  });
+
+  const groups = buildGroups(filteredReviews);
+
+  const sortedGroups = [...groups].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime();
+      case 'oldest':
+        return new Date(a.latestAt).getTime() - new Date(b.latestAt).getTime();
+      case 'rating':
+        return (b.general?.rate ?? 0) - (a.general?.rate ?? 0);
+      case 'title':
+        return a.movie.title.localeCompare(b.movie.title);
+      default:
+        return 0;
+    }
+  });
 
   useEffect(() => {
     const getReviews = async () => {
       await axios.get(process.env.REACT_APP_API_URL + '/api/user-reviews/' + user?.id, {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      }).then(res => {
-        setReviews(res.data)
-      }).catch(res => {
-        return null
-      })
-    }
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(res => setReviews(res.data)).catch(() => null);
+    };
 
     const getTvCategories = async () => {
       await axios.get(process.env.REACT_APP_API_URL + '/api/get-tv-genres', {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      }).then(res => {
-        setTvCategories(res.data)
-      })
-    }
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(res => setTvCategories(res.data));
+    };
 
     const getMovieCategories = async () => {
       await axios.get(process.env.REACT_APP_API_URL + '/api/get-movie-genres', {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      }).then(res => {
-        setMovieCategories(res.data)
-      })
-    }
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(res => setMovieCategories(res.data));
+    };
 
     getReviews();
     getMovieCategories();
     getTvCategories();
-  }, [])
+  }, []);
+
+  const movieImage = (group: MovieReviewGroup) => {
+    if (group.movie.image) {
+      return <img src={group.movie.image} alt={group.movie.title} className="w-28 h-40 object-cover rounded-lg shadow-md flex-shrink-0" />;
+    }
+    return (
+      <img
+        src={process.env.REACT_APP_API_URL + '/' + group.movie.cover?.path + '/' + group.movie.cover?.name}
+        alt={group.movie.title}
+        className="w-28 h-40 object-cover rounded-lg shadow-md flex-shrink-0"
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-8">
@@ -125,15 +156,11 @@ const MyReviews: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Meus Reviews
-              </h1>
-              <p className="text-gray-600">
-                Gerencie e visualize todos os seus reviews de filmes
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Meus Reviews</h1>
+              <p className="text-gray-600">Gerencie e visualize todos os seus reviews de filmes</p>
             </div>
             <Link
-              to="/add-movie"
+              to="/add-review"
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-200"
             >
               Novo Review
@@ -144,27 +171,22 @@ const MyReviews: React.FC = () => {
         {/* Filtros e Busca */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Busca */}
             <div className="w-full md:w-1/2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Buscar
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
               <input
                 type="text"
                 placeholder="Buscar por título ou review..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
               />
             </div>
 
             <div className="w-full md:w-1/5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
               <select
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={e => setSelectedType(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
               >
                 <option value="all">Todos</option>
@@ -173,54 +195,25 @@ const MyReviews: React.FC = () => {
               </select>
             </div>
 
-            {
-              selectedType === 'movie' ? (
-                <div className="w-full md:w-1/5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoria
-                  </label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
-                  >
-                    <option value="all">Todos</option>
-                    {movieCategories.map((category: any) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="w-full md:w-1/5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoria
-                  </label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
-                  >
-                    <option value="all">Todos</option>
-                    {tvCategories.map((category: any) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )
-            }
-
-            {/* Ordenação */}
             <div className="w-full md:w-1/5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ordenar por
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+              <select
+                value={selectedCategory}
+                onChange={e => setSelectedCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+              >
+                <option value="all">Todos</option>
+                {(selectedType === 'movie' ? movieCategories : tvCategories).map((category: any) => (
+                  <option key={category.id} value={category.name}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full md:w-1/5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={e => setSortBy(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
               >
                 <option value="newest">Mais recentes</option>
@@ -257,7 +250,9 @@ const MyReviews: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {(reviews.reduce((acc, review) => acc + review.rate, 0) / reviews.length).toFixed(1)}
+                  {reviews.length > 0
+                    ? (reviews.reduce((acc, r) => acc + r.rate, 0) / reviews.length).toFixed(1)
+                    : '—'}
                 </p>
                 <p className="text-sm text-gray-600">Avaliação Média</p>
               </div>
@@ -273,7 +268,7 @@ const MyReviews: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {new Set(reviews.map(review => review.movie.category)).size}
+                  {new Set(reviews.map(r => r.movie.category)).size}
                 </p>
                 <p className="text-sm text-gray-600">Categorias</p>
               </div>
@@ -289,7 +284,7 @@ const MyReviews: React.FC = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatDate(reviews[0]?.created_at || '')}
+                  {reviews[0]?.created_at ? formatDate(reviews[0].created_at) : '—'}
                 </p>
                 <p className="text-sm text-gray-600">Último Review</p>
               </div>
@@ -297,64 +292,77 @@ const MyReviews: React.FC = () => {
           </div>
         </div>
 
-        {/* Lista de Reviews */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {sortedReviews.length > 0 ? (
-            sortedReviews.map(review => (
-              <div key={review.id} className="bg-white rounded-2xl shadow-xl p-6">
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* Imagem do Filme */}
-                  <div className="flex-shrink-0">
-                    {
-                      review?.movie?.image ? (
-                        <img
-                          src={review?.movie?.image}
-                          alt={review?.movie?.title}
-                          className="w-32 h-48 object-cover rounded-lg shadow-md"
-                        />
-                      ) : (
-                        <img
-                          src={process.env.REACT_APP_API_URL + '/' + review?.movie?.cover?.path + '/' + review?.movie?.cover?.name}
-                          alt={review?.movie?.title}
-                          className="w-32 h-48 object-cover rounded-lg shadow-md"
-                        />
-                      )
-                    }
-                  </div>
+        {/* Lista de Reviews agrupados por filme */}
+        <div className="space-y-6">
+          {sortedGroups.length > 0 ? (
+            sortedGroups.map(group => (
+              <div key={group.movie.id} className="bg-white rounded-2xl shadow-xl p-6">
+                <div className="flex gap-6">
+                  {/* Poster */}
+                  {movieImage(group)}
 
                   {/* Conteúdo */}
-                  <div className="flex-1">
-                    <div className="flex flex-col">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                        <Link to={`/movie/${review.movie.id}`} className="hover:underline text-indigo-700">
-                          {review.movie.title}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="text-xl font-bold text-gray-900">
+                        <Link to={`/movie/${group.movie.id}`} className="hover:underline text-indigo-700">
+                          {group.movie.title}
                         </Link>
                       </h3>
-                      <div>
-                        <div className="flex items-center space-x-4 mb-2">
-                          <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
-                            {review.movie.category}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {review.movie.release_date}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {renderStars(review.rate)}
-                        <span className="text-sm text-gray-600">({review.rate}/5)</span>
-                      </div>
+                      {group.movie.type === 'tv' && (
+                        <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium whitespace-nowrap">Série</span>
+                      )}
                     </div>
 
-                    <p className="text-gray-700 leading-relaxed mb-4 truncate max-w-[250px]">
-                      {review.review}
-                    </p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="px-3 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                        {group.movie.category}
+                      </span>
+                      <span className="text-sm text-gray-500">{group.movie.release_date}</span>
+                    </div>
 
-                    <div className="flex space-x-3">
-                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200">
+                    {/* Review Geral */}
+                    {group.general && (
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          {renderStars(group.general.rate)}
+                          <span className="text-sm text-gray-500">({group.general.rate}/5)</span>
+                          <span className="text-xs text-gray-400">· {formatDate(group.general.created_at)}</span>
+                        </div>
+                        <p className="text-gray-700 leading-relaxed text-sm line-clamp-3">
+                          {group.general.review}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Reviews por Temporada */}
+                    {group.seasons.length > 0 && (
+                      <div className="space-y-3 border-t border-gray-100 pt-3">
+                        {group.seasons.map(season => (
+                          <div key={season.id} className="bg-indigo-50 rounded-lg px-4 py-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-semibold text-indigo-700">
+                                Temporada {season.season_number}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {renderStars(season.rate)}
+                                <span className="text-xs text-gray-500">({season.rate}/5)</span>
+                              </div>
+                              <span className="text-xs text-gray-400 ml-auto">{formatDate(season.created_at)}</span>
+                            </div>
+                            <p className="text-gray-700 text-sm leading-relaxed line-clamp-2">
+                              {season.review}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 mt-4">
+                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200 text-sm">
                         Editar
                       </button>
-                      <button className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition duration-200">
+                      <button className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition duration-200 text-sm">
                         Excluir
                       </button>
                     </div>
@@ -369,13 +377,12 @@ const MyReviews: React.FC = () => {
               </svg>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum review encontrado</h3>
               <p className="text-gray-600 mb-6">
-                {searchTerm || selectedCategory !== 'all' 
+                {searchTerm || selectedCategory !== 'all'
                   ? 'Tente ajustar os filtros de busca'
-                  : 'Comece criando seu primeiro review de filme'
-                }
+                  : 'Comece criando seu primeiro review de filme'}
               </p>
               <Link
-                to="/add-movie"
+                to="/add-review"
                 className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,4 +398,4 @@ const MyReviews: React.FC = () => {
   );
 };
 
-export default MyReviews; 
+export default MyReviews;

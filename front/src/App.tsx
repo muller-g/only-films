@@ -6,7 +6,6 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import AddMovie from './pages/AddMovie';
 import Profile from './pages/Profile';
 import MyReviews from './pages/MyReviews';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -53,15 +52,7 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/add-movie" 
-                element={
-                  <ProtectedRoute>
-                    <AddMovie />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
+              <Route
                 path="/profile" 
                 element={
                   <ProtectedRoute>

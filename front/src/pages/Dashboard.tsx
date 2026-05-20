@@ -50,31 +50,6 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link
-            to="/add-movie"
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 transform hover:scale-105"
-          >
-            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-              <svg
-                className="w-6 h-6 text-teal-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4h16v16H4V4zm4 0v4m0 4v4m8-8v4m0 4v4M4 8h16M4 16h16"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Cadastrar Filmes e Séries</h3>
-            <p className="text-gray-600">
-              Cadastre um novo filme ou série para review
-            </p>
-          </Link>
-
-          <Link
             to="/my-reviews"
             className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 transform hover:scale-105"
           >
@@ -157,7 +132,7 @@ const Dashboard: React.FC = () => {
             </svg>
             <p className="text-gray-500 mb-4">Nenhuma atividade recente</p>
             <Link
-              to="/add-movie"
+              to="/add-review"
               className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

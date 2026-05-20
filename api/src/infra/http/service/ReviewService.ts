@@ -71,7 +71,11 @@ export default class ReviewService {
                             cover: true
                         }
                     },
-                    user: true
+                    user: {
+                        include: {
+                            profile_photo: true
+                        }
+                    }
                 }
             });
         } catch (e: any){

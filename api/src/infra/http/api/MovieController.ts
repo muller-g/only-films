@@ -22,16 +22,16 @@ export default class MovieController {
                 let movie = await MovieService.getByTmdbId(id);
 
                 if(movie){
-                    return res.status(200).json({message: "Movie created successfully"});
+                    return res.status(200).json(movie);
                 }
 
                 let movieCategory = await MovieGenreService.getByTmdbId(category);
-                
+
                 if(type === 'tv'){
                     movieCategory = await TvGenreService.getByTmdbId(category);
                 }
 
-                await MovieService.create({
+                const createdMovie = await MovieService.create({
                     title: title,
                     category: movieCategory?.name,
                     releaseDate: releaseDate,
@@ -41,7 +41,7 @@ export default class MovieController {
                     addedById: userId
                 });
 
-                return res.status(200).json({message: "Movie created successfully"});
+                return res.status(200).json(createdMovie);
             } catch(e){
                 return res.status(500).json({message: "Error creating movie"});
             }
