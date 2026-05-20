@@ -251,7 +251,7 @@ const MyReviews: React.FC = () => {
               <div>
                 <p className="text-2xl font-bold text-gray-900">
                   {reviews.length > 0
-                    ? (reviews.reduce((acc, r) => acc + r.rate, 0) / reviews.length).toFixed(1)
+                    ? (reviews.reduce((acc, r) => acc + (r.rate ?? 0), 0) / reviews.length).toFixed(1)
                     : '—'}
                 </p>
                 <p className="text-sm text-gray-600">Avaliação Média</p>
@@ -326,7 +326,7 @@ const MyReviews: React.FC = () => {
                       <div className="mb-4">
                         <div className="flex items-center gap-2 mb-1">
                           {renderStars(group.general.rate)}
-                          <span className="text-sm text-gray-500">({group.general.rate}/5)</span>
+                          <span className="text-sm text-gray-500">({group.general.rate ?? '—'}/5)</span>
                           <span className="text-xs text-gray-400">· {formatDate(group.general.created_at)}</span>
                         </div>
                         <p className="text-gray-700 leading-relaxed text-sm line-clamp-3">
@@ -346,7 +346,7 @@ const MyReviews: React.FC = () => {
                               </span>
                               <div className="flex items-center gap-1">
                                 {renderStars(season.rate)}
-                                <span className="text-xs text-gray-500">({season.rate}/5)</span>
+                                <span className="text-xs text-gray-500">({season.rate ?? '—'}/5)</span>
                               </div>
                               <span className="text-xs text-gray-400 ml-auto">{formatDate(season.created_at)}</span>
                             </div>

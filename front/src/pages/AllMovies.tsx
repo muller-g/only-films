@@ -193,7 +193,7 @@ const AllMovies: React.FC = () => {
 
                     <div className="flex items-center gap-2 mb-2">
                       {renderStars(review.rate)}
-                      <span className="text-sm text-gray-500">({review.rate}/5)</span>
+                      <span className="text-sm text-gray-500">({review.rate ?? '—'}/5)</span>
                     </div>
 
                     <p className="text-gray-700 text-sm leading-relaxed line-clamp-3 mb-3">

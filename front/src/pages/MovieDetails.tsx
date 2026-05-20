@@ -175,7 +175,7 @@ const MovieDetails: React.FC = () => {
   };
 
   const userGroups = buildGroups(reviews);
-  const averageRate = reviews.length > 0 ? movie.total_rate / reviews.length : 0;
+  const averageRate = reviews.length > 0 ? ((movie?.total_rate ?? 0) / reviews.length) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-4 px-2 sm:px-4 lg:px-8 pt-8">
@@ -202,7 +202,7 @@ const MovieDetails: React.FC = () => {
 
             <div className="flex items-center space-x-1 mb-4">
               <Stars rating={Math.round(averageRate)} size="text-2xl" />
-              <span className="ml-2 text-sm text-gray-600">({averageRate?.toFixed(1)}/5)</span>
+              <span className="ml-2 text-sm text-gray-600">({isNaN(averageRate) ? '0.0' : averageRate.toFixed(1)}/5)</span>
             </div>
 
             <button
