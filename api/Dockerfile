@@ -12,6 +12,8 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 RUN addgroup -S app && adduser -S app -G app
 
 COPY package*.json ./
