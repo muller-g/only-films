@@ -1,0 +1,65 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cine-review-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cine-review
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - cine-review-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cine-review"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: cine-review-api
+    restart: unless-stopped
+    env_file:
+      - ./api/.env
+    environment:
+      # Sobrescreve o DATABASE_URL do .env para usar o hostname interno do Docker
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/cine-review
+    ports:
+      - "3001:3001"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cine-review-network
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      args:
+        # Lê REACT_APP_API_URL do front/.env ou da variável de ambiente do shell
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3001}
+    container_name: cine-review-front
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - cine-review-network
+
+networks:
+  cine-review-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  uploads_data:

@@ -54,39 +54,88 @@ Objetivo: [onboarding | refatoração | auditoria | documentação]
 3. Verificar uso de dependências vulneráveis
 4. Verificar configurações de segurança
 
-## Formato Esperado da Resposta
+## Arquivos a Criar
 
-```
-## Análise da Base de Código
+Ao final da análise, **escrever obrigatoriamente** os seguintes arquivos. Não exibir apenas no chat.
 
-### Visão Geral
+### `docs/architecture/overview.md`
+Documento principal de arquitetura. Conteúdo:
+
+```markdown
+# Arquitetura do Sistema
+
+## Visão Geral
 - **Stack:** [tecnologias identificadas]
-- **Tipo:** [monólito | microserviços | etc.]
-- **Tamanho:** [linhas de código estimadas]
+- **Tipo:** [monólito | microserviços | BFF | etc.]
+- **Banco de dados:** [banco(s) em uso]
+- **Tamanho estimado:** [linhas de código]
 - **Maturidade:** [início | desenvolvimento | maduro | legado]
 
-### Arquitetura Identificada
-[Descrição da arquitetura com diagrama em texto]
+## Arquitetura de Camadas
+[Diagrama em texto mostrando as camadas e dependências]
 
-### Módulos Principais
+## Módulos Principais
 | Módulo | Responsabilidade | Localização |
 |---|---|---|
 | [módulo] | [o que faz] | [path] |
 
-### Pontos Fortes
+## Fluxo de Dados
+[Descrição de como os dados fluem pela aplicação]
+
+## Integrações Externas
+- [serviço externo]: [propósito]
+
+## Pontos de Entrada
+- [endpoint / rota / comando de entrada]
+
+## Pontos Fortes
 - [o que está bem feito]
 
-### Débito Técnico
-| Severidade | Descrição | Localização |
-|---|---|---|
-| ALTA | [problema] | [arquivo:linha] |
+## Mapa de Navegação
+[Guia de onde encontrar o quê — útil para agentes e devs novos]
+```
 
-### Recomendações
-1. [ação prioritária]
-2. [ação secundária]
+### `docs/architecture/tech-debt.md`
+Registro de débito técnico encontrado. Conteúdo:
 
-### Mapa de Navegação
-[Guia de onde encontrar o quê no código]
+```markdown
+# Débito Técnico
+
+> Gerado em: [data]
+> Última revisão: [data]
+
+## Itens Identificados
+
+| Severidade | Descrição | Localização | Impacto |
+|---|---|---|---|
+| ALTA | [problema] | [arquivo:linha] | [impacto no negócio] |
+| MÉDIA | [problema] | [arquivo:linha] | [impacto] |
+| BAIXA | [problema] | [arquivo:linha] | [impacto] |
+
+## Recomendações Priorizadas
+1. [ação de maior impacto]
+2. [próxima ação]
+3. [ação de menor urgência]
+```
+
+## Formato da Resposta no Chat
+
+Após criar os arquivos, exibir no chat apenas o resumo:
+
+```
+## Análise concluída
+
+### Arquivos criados:
+- docs/architecture/overview.md
+- docs/architecture/tech-debt.md
+
+### Resumo:
+- **Stack:** [stack identificada]
+- **Módulos:** [quantidade] módulos mapeados
+- **Débito técnico:** [X] itens ([Y] alta severidade)
+
+### Próximo passo sugerido:
+[ação mais importante com base na análise]
 ```
 
 ## Boas Práticas
